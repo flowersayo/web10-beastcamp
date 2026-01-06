@@ -1,0 +1,20 @@
+{
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "backend/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --dir backend lint"
+    ],
+    "queue-backend/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --dir queue-backend lint"
+    ],
+    "frontend/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --dir frontend lint"
+    ]
+  }
+}
