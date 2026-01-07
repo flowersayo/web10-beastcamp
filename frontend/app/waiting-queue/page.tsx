@@ -1,19 +1,22 @@
 "use client";
 
 import { usePreventRefresh } from "@/hooks/usePreventRefresh";
-
-const WAINTING_ORDER = 5;
+import { useWaitingQueue } from "./hooks/useWaitingQueue";
+import ProgressBar from "./_source/components/ProgressBar";
 
 export default function WaitingQueuePage() {
+  const { data, isError } = useWaitingQueue();
   usePreventRefresh();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2 text-center">
       <span>나의 대기 순서</span>
-      <span>{WAINTING_ORDER}</span>
-
-      <div className="w-50 bg-gray-400 my-4">progress bar</div>
-
+      <span>
+        {isError ? "오류가 발생했습니다. 다시 시도해주세요." : data?.order}
+      </span>
+      <div className="w-50 my-4">
+        <ProgressBar value={data?.order ?? 0} />
+      </div>
       <span>
         ⚠️ 새로고침 하거나 재접속 하시면
         <br />
