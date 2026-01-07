@@ -100,6 +100,50 @@ POST /api/venues
 }
 ```
 
+# 공연장 목록 조회.
+
+## request
+
+```bash
+GET /api/venues
+```
+
+### 예시.
+
+```bash
+GET /api/venues
+```
+
+## response
+
+```bash
+{
+	"venues": [
+		{
+      "id": number,
+      "venue_name": string
+    }
+	]
+}
+```
+
+### 예시.
+
+```bash
+{
+  "venues": [
+    {
+      "id": 123,
+      "venue_name": "장충 체육관"
+    },
+    {
+      "id": 124,
+      "venue_name": "올림픽 체조경기장"
+    }
+  ]
+}
+```
+
 # 공연 삽입.
 
 임영웅 콘서트 삽입.
