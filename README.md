@@ -55,15 +55,13 @@ https://web10.site/
 
 ### Frontend
 <div>
+  <img src="https://img.shields.io/badge/next.js-16.1.1-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js"/>
   <img src="https://img.shields.io/badge/react-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
   <img src="https://img.shields.io/badge/typescript-5.9.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/tailwindcss-4.1.18-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
-  <img src="https://img.shields.io/badge/vite-7.2.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
 </div>
 <div>
   <img src="https://img.shields.io/badge/tanstack%20query-5.90.12-FF4154?style=for-the-badge&logo=reactquery&logoColor=white" alt="TanStack Query"/>
-  <img src="https://img.shields.io/badge/axios-1.13.2-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios"/>
-  <img src="https://img.shields.io/badge/tanstack%20router-latest-FF4154?style=for-the-badge&logo=reactrouter&logoColor=white" alt="TanStack Router"/>
 </div>
 
 ### Backend
