@@ -38,6 +38,24 @@ export const useZoomPan = (options: UseZoomPanOptions = {}) => {
     }
   };
 
+  const applyZoom = (originX: number, originY: number, delta: number) => {
+    const currentScale = scaleRef.current;
+    const nextScale = Math.min(
+      Math.max(currentScale * delta, minScale),
+      maxScale
+    );
+
+    if (nextScale === currentScale) return; // 변동 없으면 중단
+
+    const ratio = nextScale / currentScale;
+    const newX = originX - (originX - offsetRef.current.x) * ratio;
+    const newY = originY - (originY - offsetRef.current.y) * ratio;
+
+    offsetRef.current = { x: newX, y: newY };
+    scaleRef.current = nextScale;
+    updateDOM(nextScale, newX, newY);
+  };
+
   const reset = () => {
     offsetRef.current = initialOffset;
     scaleRef.current = initialScale;
@@ -46,46 +64,14 @@ export const useZoomPan = (options: UseZoomPanOptions = {}) => {
 
   const handleZoom = (isZoomIn: boolean) => {
     if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const delta = isZoomIn ? 1.5 : 1 / 1.5;
-    const nextScale = Math.min(
-      Math.max(scaleRef.current * delta, minScale),
-      maxScale
-    );
-    const ratio = nextScale / scaleRef.current;
-
-    const newX = centerX - (centerX - offsetRef.current.x) * ratio;
-    const newY = centerY - (centerY - offsetRef.current.y) * ratio;
-
-    offsetRef.current = { x: newX, y: newY };
-    scaleRef.current = nextScale;
-    updateDOM(nextScale, newX, newY);
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    applyZoom(width / 2, height / 2, isZoomIn ? 1.5 : 1 / 1.5);
   };
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const nextScale = Math.min(
-      Math.max(scaleRef.current * delta, minScale),
-      maxScale
-    );
-    const ratio = nextScale / scaleRef.current;
-
-    const newX = mouseX - (mouseX - offsetRef.current.x) * ratio;
-    const newY = mouseY - (mouseY - offsetRef.current.y) * ratio;
-
-    offsetRef.current = { x: newX, y: newY };
-    scaleRef.current = nextScale;
-    updateDOM(nextScale, newX, newY);
+    const { left, top } = containerRef.current.getBoundingClientRect();
+    applyZoom(e.clientX - left, e.clientY - top, e.deltaY > 0 ? 0.9 : 1.1);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
