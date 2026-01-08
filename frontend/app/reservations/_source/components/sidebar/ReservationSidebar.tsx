@@ -15,7 +15,7 @@ export default function ReservationSidebar({
   handleRemoveSeat,
 }: ReservationSidebarProps) {
   const totalPrice = Array.from(selectedSeats.values()).reduce(
-    (sum, seat) => sum + seat.price,
+    (sum, seat) => sum + gradeInfo[seat.seatGrade].price,
     0
   );
   return (
@@ -66,22 +66,26 @@ export default function ReservationSidebar({
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <div className={`text-sm ${gradeInfo[seat.grade].textColor}`}>
-                    {gradeInfo[seat.grade].name}
+                  <div
+                    className={`text-sm ${gradeInfo[seat.seatGrade].textColor}`}
+                  >
+                    {gradeInfo[seat.seatGrade].name}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {seat.floor} {seat.section} {seat.row}열 {seat.number}번
+                    {seat.floor} {seat.floor} 번
                   </div>
                 </div>
                 <button
-                  onClick={() => handleRemoveSeat(seat.id)}
+                  onClick={() => handleRemoveSeat(seat.seatInfoId)}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   ✕
                 </button>
               </div>
               <div className="text-right">
-                <span className="text-sm">{seat.price.toLocaleString()}원</span>
+                <span className="text-sm">
+                  {gradeInfo[seat.seatGrade].price.toLocaleString()}원
+                </span>
               </div>
             </div>
           ))

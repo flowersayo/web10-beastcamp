@@ -1,105 +1,131 @@
+/* eslint-disable @next/next/no-img-element */
+
 import { gradeInfo } from "../../data/seat";
+import {
+  useBlockSeatQuery,
+  useReservedSeatQuery,
+  useSeatMetaQuery,
+} from "../../queries/seat";
 import { Seat } from "../../types/reservationType";
 
 interface StageMapProps {
-  viewBox: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  contentRef: React.Ref<HTMLDivElement>;
+  containerRef: React.Ref<HTMLDivElement>;
+  isMinScale: boolean;
   selectedSeats: ReadonlyMap<string, Seat>;
-  seats: Seat[];
   handleToggleSeat: (seatId: string, data: Seat) => void;
+  handleWheel: (e: React.WheelEvent, rect?: DOMRect) => void;
+  handleMouseDown: (e: React.MouseEvent) => void;
+  handleMouseMove: (e: React.MouseEvent) => void;
+  handleMouseUp: () => void;
 }
 
 export default function StageMap({
-  viewBox,
+  contentRef,
+  containerRef,
+  isMinScale,
   selectedSeats,
-  seats,
   handleToggleSeat,
+  handleWheel,
+  handleMouseDown,
+  handleMouseMove,
+  handleMouseUp,
 }: StageMapProps) {
+  const { data: reservedSeats } = useReservedSeatQuery();
+  const { data: blocks } = useBlockSeatQuery();
+  const { data: seats } = useSeatMetaQuery();
+
+  const releasedSeatSet = new Set(
+    reservedSeats
+      .map((b) =>
+        b.seats
+          .filter((s) => s.statusInfo === "RELEASED")
+          .map((s) => s.seatInfoId)
+      )
+      .flat()
+  );
+
   return (
-    <div className="flex-1 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
-
-      <svg
-        viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-        className="w-full h-full"
-        preserveAspectRatio="xMidYMid meet"
+    <div
+      ref={containerRef}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      className="relative  flex-1 bg-[#EDEFF3] rounded-lg overflow-hidden flex items-center justify-center"
+    >
+      <div
+        ref={contentRef}
+        className="relative w-full h-full"
+        style={{
+          transformOrigin: "0 0",
+        }}
       >
-        <rect x="250" y="80" width="300" height="60" fill="#cbd5e1" rx="8" />
-        <text
-          x="400"
-          y="115"
-          textAnchor="middle"
-          fill="#64748b"
-          fontSize="20"
-          fontWeight="600"
-        >
-          STAGE
-        </text>
-
-        <text x="40" y="220" fill="#6b7280" fontSize="14" fontWeight="600">
-          1F
-        </text>
-        <text x="40" y="380" fill="#6b7280" fontSize="14" fontWeight="600">
-          2F
-        </text>
-
-        <text x="150" y="165" fill="#9ca3af" fontSize="11">
-          R-Left
-        </text>
-        <text x="350" y="165" fill="#9ca3af" fontSize="11">
-          VIP
-        </text>
-        <text x="600" y="165" fill="#9ca3af" fontSize="11">
-          R-Right
-        </text>
-        <text x="130" y="335" fill="#9ca3af" fontSize="11">
-          S-Left
-        </text>
-        <text x="380" y="325" fill="#9ca3af" fontSize="11">
-          A-Center
-        </text>
-        <text x="580" y="335" fill="#9ca3af" fontSize="11">
-          S-Right
-        </text>
-        <text x="380" y="465" fill="#9ca3af" fontSize="11">
-          일반석
-        </text>
-
-        {seats.map((seat) => {
-          const isSelected = selectedSeats.has(seat.id);
-          const fillColor = seat.isOccupied
-            ? "#d1d5db"
-            : gradeInfo[seat.grade].fillColor;
-          const opacity = seat.isOccupied ? 0.3 : isSelected ? 1 : 0.6;
-          const strokeWidth = isSelected ? 2 : 0;
-
-          return (
-            <circle
-              key={seat.id}
-              cx={seat.x}
-              cy={seat.y}
-              r={isSelected ? 6 : 5}
-              fill={fillColor}
-              opacity={opacity}
-              stroke={isSelected ? "#fff" : "none"}
-              strokeWidth={strokeWidth}
-              className={`${
-                !seat.isOccupied
-                  ? "cursor-pointer hover:opacity-100"
-                  : "cursor-not-allowed"
-              } transition-all`}
-              onClick={() => {
-                if (!seat.isOccupied) {
-                  handleToggleSeat(seat.id, seat);
-                }
-              }}
+        <div className="flex justify-center items-center absolute w-full h-full p-16">
+          {isMinScale ? (
+            <img
+              className="w-full h-full select-none pointer-events-none z-30"
+              src="494b5ac0ae674853956bb73037051895.svg"
+              alt=""
             />
-          );
-        })}
-      </svg>
+          ) : (
+            <img
+              className="w-full h-full select-none pointer-events-none"
+              src={"/7079e87b843d4852a5ee78d9fd346c19.svg"}
+              alt="좌석배치도"
+            />
+          )}
+          <svg
+            className={`absolute inset-0 w-full h-full p-16 ${
+              isMinScale ? " pointer-events-none" : " pointer-event-auto"
+            }`}
+            viewBox="0 0 510 435"
+          >
+            {seats?.map((b) => (
+              <g key={b.blockKey} id={b.blockKey}>
+                {b.seats.map((seat) => {
+                  const isSelected = selectedSeats.has(seat.seatInfoId);
+
+                  return (
+                    <circle
+                      key={seat.seatInfoId}
+                      cx={seat.posLeft}
+                      cy={seat.posTop}
+                      r={1}
+                      fill={
+                        isSelected
+                          ? "#FF0000"
+                          : releasedSeatSet.has(seat.seatInfoId)
+                          ? gradeInfo[seat.seatGrade]?.fillColor || "#7c68ee"
+                          : "#EDEFF3"
+                      }
+                      stroke={
+                        isSelected
+                          ? "#FF0000"
+                          : releasedSeatSet.has(seat.seatInfoId)
+                          ? "#000"
+                          : "#EDEFF3"
+                      }
+                      strokeWidth={isSelected ? 0.3 : 0.1}
+                      className={
+                        releasedSeatSet.has(seat.seatInfoId)
+                          ? "cursor-pointer hover:r-2"
+                          : ""
+                      }
+                      style={{ pointerEvents: "auto" }}
+                      onClick={() => {
+                        if (!releasedSeatSet.has(seat.seatInfoId)) return;
+                        handleToggleSeat(seat.seatInfoId, seat);
+                      }}
+                    />
+                  );
+                })}
+              </g>
+            ))}
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
