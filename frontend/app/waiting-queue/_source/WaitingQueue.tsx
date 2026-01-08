@@ -1,5 +1,5 @@
 import { usePreventRefresh } from "@/hooks/usePreventRefresh";
-import { useWaitingQueue } from "../hooks/useWaitingQueue";
+import { useWaitingQueue } from "./hooks/useWaitingQueue";
 import ProgressBar from "./components/ProgressBar";
 
 export default function WaitingQueue() {

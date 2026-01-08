@@ -1,5 +1,6 @@
 "use client";
 
+import { API_PREFIX } from "@/constants/api";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 
@@ -19,7 +20,7 @@ export function useWaitingQueue() {
     const poll = async () => {
       try {
         const response = await axios.get<WaitingOrderResponse>(
-          "/api/mock/waiting"
+          `${API_PREFIX}/waiting`
         );
         setData(response.data);
       } catch (error) {
