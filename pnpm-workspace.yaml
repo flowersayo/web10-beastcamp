@@ -7,3 +7,4 @@ packages:
 onlyBuiltDependencies:
   - '@nestjs/core'
   - sqlite3
+  - unrs-resolver
