@@ -1,5 +1,3 @@
-"use client";
-
 import { MAX_ORDER } from "@/app/api/mock/waiting/route";
 import { Progress } from "@/components/ui/progress";
 
