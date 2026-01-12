@@ -1,13 +1,7 @@
 import { ArrowLeft } from "lucide-react";
-import { RESERVATION_LIMIT } from "../constants/reservationConstants";
+import SelectedSeatCount from "./header/SelectedSeatCount";
 
-interface ReservationHeaderProps {
-  selectedSeatsSize: number;
-}
-
-export default function ReservationHeader({
-  selectedSeatsSize,
-}: ReservationHeaderProps) {
+export default function ReservationHeader() {
   return (
     <div className="bg-white border-b border-gray-200 shrink-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -24,9 +18,7 @@ export default function ReservationHeader({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-500">
-              선택: {selectedSeatsSize}/{RESERVATION_LIMIT}석
-            </div>
+            <SelectedSeatCount />
           </div>
         </div>
       </div>

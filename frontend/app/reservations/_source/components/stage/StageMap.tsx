@@ -143,6 +143,54 @@ export default function StageMap({
 
           <svg
             className={`absolute inset-0 w-full h-full ${
+              isMinScale ? "pointer-events-none" : "pointer-events-auto"
+            }`}
+            viewBox="0 0 510 435"
+          >
+            {seats?.map((b) => (
+              <g key={b.blockKey} id={b.blockKey}>
+                {b.seats.map((seat) => {
+                  const isSelected = selectedSeats.has(seat.seatInfoId);
+
+                  return (
+                    <circle
+                      key={seat.seatInfoId}
+                      cx={seat.posLeft}
+                      cy={seat.posTop}
+                      r={1}
+                      fill={
+                        isSelected
+                          ? "#FF0000"
+                          : releasedSeatSet.has(seat.seatInfoId)
+                          ? gradeInfo[seat.seatGrade]?.fillColor || "#7c68ee"
+                          : "#EDEFF3"
+                      }
+                      stroke={
+                        isSelected
+                          ? "#FF0000"
+                          : releasedSeatSet.has(seat.seatInfoId)
+                          ? "#000"
+                          : "#EDEFF3"
+                      }
+                      strokeWidth={isSelected ? 0.3 : 0.1}
+                      className={
+                        releasedSeatSet.has(seat.seatInfoId)
+                          ? "cursor-pointer hover:r-2"
+                          : ""
+                      }
+                      style={{ pointerEvents: "auto" }}
+                      onClick={() => {
+                        if (!releasedSeatSet.has(seat.seatInfoId)) return;
+                        handleToggleSeat(seat.seatInfoId, seat);
+                      }}
+                    />
+                  );
+                })}
+              </g>
+            ))}
+          </svg>
+          <svg
+            className={`absolute inset-0 w-full h-full ${
               isMinScale ? "pointer-events-auto" : "pointer-events-none"
             }`}
             viewBox="0 0 510 435"
