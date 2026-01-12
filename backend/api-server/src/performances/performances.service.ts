@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { Performance } from './entities/performance.entity';
 import { CreatePerformanceRequestDto } from './dto/create-performance-request.dto';
 import { Venue } from '../venues/entities/venue.entity';
+import { SearchPerformancesRequestDto } from './dto/search-performances-request.dto';
+import { SearchPerformancesResponseDto } from './dto/search-performances-response.dto';
+import { PerformancesRepository } from './performances.repository';
 
 @Injectable()
 export class PerformancesService {
   constructor(
-    @InjectRepository(Performance)
-    private performancesRepository: Repository<Performance>,
+    private performancesRepository: PerformancesRepository,
     @InjectRepository(Venue)
     private venuesRepository: Repository<Venue>,
   ) {}
@@ -34,5 +36,13 @@ export class PerformancesService {
     const savedPerformance =
       await this.performancesRepository.save(performance);
     return { id: savedPerformance.id };
+  }
+
+  async search(
+    requestDto: SearchPerformancesRequestDto,
+  ): Promise<SearchPerformancesResponseDto> {
+    const performances = await this.performancesRepository.search(requestDto);
+
+    return SearchPerformancesResponseDto.fromEntities(performances);
   }
 }
