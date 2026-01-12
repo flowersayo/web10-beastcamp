@@ -14,7 +14,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('범용 API Server')
+    .setTitle('일반 API Server')
     .setDescription('공연, 공연장 정보를 제공합니다.')
     .setVersion('0.1')
     .build();
