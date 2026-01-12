@@ -44,3 +44,13 @@ Dockerfile은 3단계 멀티 스테이지 빌드로 구성되어 있습니다:
 1. **deps**: pnpm을 사용하여 필요한 의존성만 설치
 2. **builder**: Vite로 프로덕션 빌드 수행
 3. **production**: Nginx로 정적 파일 서빙 (최종 이미지 크기 최소화)
+
+--
+
+# Docker 캐시 클리어 후 빌드
+
+docker build --no-cache -f frontend/Dockerfile -t beastcamp-frontend .
+
+# 빌드 성공 후 실행
+
+docker run -d -p 3000:3000 --name frontend beastcamp-frontend
