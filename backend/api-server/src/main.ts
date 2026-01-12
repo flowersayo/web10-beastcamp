@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,15 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  const config = new DocumentBuilder()
+    .setTitle('범용 API Server')
+    .setDescription('공연, 공연장 정보를 제공합니다.')
+    .setVersion('0.1')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
