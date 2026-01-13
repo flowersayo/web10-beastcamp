@@ -11,6 +11,18 @@ import { Venue } from './venue.entity';
 @Entity('blocks')
 @Unique(['venueId', 'blockDataName'])
 export class Block {
+  constructor(
+    venue?: Venue,
+    blockDataName?: string,
+    rowSize?: number,
+    colSize?: number,
+  ) {
+    if (venue) this.venue = venue;
+    if (blockDataName) this.blockDataName = blockDataName;
+    if (rowSize) this.rowSize = rowSize;
+    if (colSize) this.colSize = colSize;
+  }
+
   @PrimaryGeneratedColumn()
   id: number;
 
