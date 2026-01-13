@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 describe('공연장 (Venues) API', () => {
   let app: INestApplication;
@@ -12,8 +14,13 @@ describe('공연장 (Venues) API', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestExpressApplication>();
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+    // E2E 테스트 환경에서 정적 파일 서빙 강제 연결
+    (app as NestExpressApplication).useStaticAssets(
+      join(process.cwd(), 'public'),
+    );
 
     await app.init();
   });
@@ -257,6 +264,26 @@ describe('공연장 (Venues) API', () => {
 
       it('빈 객체를 반환해야 한다', () => {
         expect(response.body).toEqual({});
+      });
+    });
+  });
+
+  describe('정적 파일 서빙 (Static Assets)', () => {
+    describe('존재하는 SVG 파일 요청 시', () => {
+      let response: request.Response;
+
+      beforeAll(async () => {
+        response = await request(app.getHttpServer() as App).get(
+          '/static/svg/incheon_namdong_gymnasium.svg',
+        );
+      });
+
+      it('HTTP 상태 코드 200을 반환해야 한다', () => {
+        expect(response.status).toBe(200);
+      });
+
+      it('Content-Type이 image/svg+xml이어야 한다', () => {
+        expect(response.headers['content-type']).toMatch(/^image\/svg\+xml/);
       });
     });
   });
