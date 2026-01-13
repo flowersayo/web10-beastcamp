@@ -15,7 +15,8 @@ export default function ProgressBar({
   return (
     <Progress
       value={Math.round(progress)}
-      className="bg-gray-200 rounded-full h-4 mb-4 overflow-hidden"
+      className="bg-gray-200 rounded-full h-4 mb-4 overflow-hidden "
+      indicatorClassName="bg-gradient-to-r from-purple-500 to-pink-500"
     />
   );
 }
