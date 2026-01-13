@@ -3,9 +3,13 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Block } from './../src/venues/entities/block.entity';
+import { Repository } from 'typeorm';
 
 describe('공연장 (Venues) API', () => {
   let app: INestApplication;
+  let blockRepository: Repository<Block>;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,6 +18,11 @@ describe('공연장 (Venues) API', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+    blockRepository = moduleFixture.get<Repository<Block>>(
+      getRepositoryToken(Block),
+    );
+
     await app.init();
   });
 
@@ -63,7 +72,7 @@ describe('공연장 (Venues) API', () => {
       beforeAll(async () => {
         await request(app.getHttpServer() as App)
           .post('/api/venues')
-          .send({ venue_name: '장충 체육관' });
+          .send({ venue_name: '인천 남동 체육관' });
 
         await request(app.getHttpServer() as App)
           .post('/api/venues')
@@ -94,8 +103,115 @@ describe('공연장 (Venues) API', () => {
           venues: { id: number; venue_name: string }[];
         };
         const venueNames = body.venues.map((v) => v.venue_name);
-        expect(venueNames).toContain('장충 체육관');
+        expect(venueNames).toContain('인천 남동 체육관');
         expect(venueNames).toContain('올림픽 체조경기장');
+      });
+    });
+  });
+
+  describe('GET /api/venues/:id 요청 시', () => {
+    let createdVenueId: number;
+
+    beforeAll(async () => {
+      const res = await request(app.getHttpServer() as App)
+        .post('/api/venues')
+        .send({
+          venue_name: '인천 남동 체육관',
+          block_map_url: '/static/svg/incheon_namdong_gymnasium.svg',
+        });
+      createdVenueId = (res.body as { id: number }).id;
+
+      await blockRepository.save([
+        {
+          venueId: createdVenueId,
+          blockDataName: 'A-1',
+          rowSize: 10,
+          colSize: 15,
+        },
+        {
+          venueId: createdVenueId,
+          blockDataName: 'B-1',
+          rowSize: 12,
+          colSize: 20,
+        },
+      ]);
+    });
+
+    describe('존재하는 공연장 ID가 주어지면', () => {
+      let response: request.Response;
+
+      beforeAll(async () => {
+        response = await request(app.getHttpServer() as App).get(
+          `/api/venues/${createdVenueId}`,
+        );
+      });
+
+      it('HTTP 상태 코드 200을 반환해야 한다', () => {
+        expect(response.status).toBe(200);
+      });
+
+      it('응답 본문에 공연장 상세 정보가 포함되어야 한다', () => {
+        const body = response.body as {
+          id: number;
+          venueName: string;
+          blockMapUrl: string;
+          blocks: {
+            id: number;
+            blockDataName: string;
+            rowSize: number;
+            colSize: number;
+          }[];
+        };
+        expect(body.id).toBe(createdVenueId);
+        expect(body.venueName).toBe('인천 남동 체육관');
+        expect(body.blockMapUrl).toBe(
+          '/static/svg/incheon_namdong_gymnasium.svg',
+        );
+        expect(Array.isArray(body.blocks)).toBe(true);
+      });
+
+      it('구역(Block) 정보가 올바르게 반환되어야 한다', () => {
+        const body = response.body as {
+          blocks: {
+            id: number;
+            blockDataName: string;
+            rowSize: number;
+            colSize: number;
+          }[];
+        };
+        expect(body.blocks.length).toBe(2);
+
+        const blockA1 = body.blocks.find((b) => b.blockDataName === 'A-1');
+        expect(blockA1).toBeDefined();
+        if (blockA1) {
+          expect(blockA1.rowSize).toBe(10);
+          expect(blockA1.colSize).toBe(15);
+        }
+
+        const blockB1 = body.blocks.find((b) => b.blockDataName === 'B-1');
+        expect(blockB1).toBeDefined();
+        if (blockB1) {
+          expect(blockB1.rowSize).toBe(12);
+          expect(blockB1.colSize).toBe(20);
+        }
+      });
+    });
+
+    describe('존재하지 않는 공연장 ID가 주어지면', () => {
+      let response: request.Response;
+
+      beforeAll(async () => {
+        response = await request(app.getHttpServer() as App).get(
+          '/api/venues/99999',
+        );
+      });
+
+      it('HTTP 상태 코드 200을 반환해야 한다', () => {
+        expect(response.status).toBe(200);
+      });
+
+      it('빈 객체를 반환해야 한다', () => {
+        expect(response.body).toEqual({});
       });
     });
   });
