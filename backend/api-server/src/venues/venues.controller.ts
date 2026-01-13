@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { VenuesService } from './venues.service';
 import { CreateVenueRequestDto } from './dto/create-venue-request.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetVenuesResponseDto } from './dto/get-venues-response.dto';
 import { GetVenueResponseDto } from './dto/get-venue-response.dto';
 import { CreateBlocksRequestDto } from './dto/create-blocks-request.dto';
@@ -31,6 +31,7 @@ export class VenuesController {
 
   @Post(':id/blocks')
   @ApiOperation({ summary: '공연장 구역 생성' })
+  @ApiParam({ name: 'id', description: '공연장 ID', example: 1 })
   @ApiResponse({
     status: 201,
     description: '성공적으로 구역이 생성됨',
@@ -54,7 +55,8 @@ export class VenuesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: '공연장 상세 조회 (구역 포함)' })
+  @ApiOperation({ summary: '공연장 조회 (구역 포함)' })
+  @ApiParam({ name: 'id', description: '공연장 ID', example: 1 })
   @ApiResponse({
     status: 200,
     description:
