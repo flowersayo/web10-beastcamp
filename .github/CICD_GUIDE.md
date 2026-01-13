@@ -149,7 +149,21 @@ pnpm --filter @beastcamp/api-server... build
 
 ### 1. 배포 서버 준비
 
-배포 서버에 다음 환경을 준비하세요:
+이 프로젝트는 **서비스별로 분리된 서버**에 배포됩니다:
+
+```
+프론트엔드 서버 (server1)
+└── frontend
+
+백엔드 서버 (server2)
+├── api-server
+└── ticket-server
+
+큐 서버 (server3)
+└── queue-backend
+```
+
+**각 서버**에서 다음 환경을 준비하세요:
 
 1. **Docker 및 Docker Compose 설치**
    ```bash
@@ -176,17 +190,35 @@ pnpm --filter @beastcamp/api-server... build
 
 ### 2. GitHub Secrets 설정
 
-GitHub Repository → Settings → Secrets and variables → Actions에서 다음 시크릿을 추가하세요:
+GitHub Repository → Settings → Secrets and variables → Actions에서 **서버별로** 시크릿을 추가하세요:
+
+#### 프론트엔드 서버
 
 | Secret 이름 | 설명 | 예시 |
 |------------|------|-----|
-| `SSH_PRIVATE_KEY` | 배포 서버 SSH 개인키 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-| `SERVER_HOST` | 배포 서버 호스트 | `123.456.78.90` 또는 `server.example.com` |
-| `SERVER_USER` | 배포 서버 사용자 | `deploy` 또는 `ubuntu` |
+| `FRONTEND_SSH_KEY` | 프론트엔드 서버 SSH 개인키 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `FRONTEND_SERVER_HOST` | 프론트엔드 서버 호스트 | `123.456.78.90` |
+| `FRONTEND_SERVER_USER` | 프론트엔드 서버 사용자 | `deploy` |
+
+#### 백엔드 서버
+
+| Secret 이름 | 설명 | 예시 |
+|------------|------|-----|
+| `BACKEND_SSH_KEY` | 백엔드 서버 SSH 개인키 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `BACKEND_SERVER_HOST` | 백엔드 서버 호스트 | `123.456.78.91` |
+| `BACKEND_SERVER_USER` | 백엔드 서버 사용자 | `deploy` |
+
+#### 큐 서버
+
+| Secret 이름 | 설명 | 예시 |
+|------------|------|-----|
+| `QUEUE_SSH_KEY` | 큐 서버 SSH 개인키 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `QUEUE_SERVER_HOST` | 큐 서버 호스트 | `123.456.78.92` |
+| `QUEUE_SERVER_USER` | 큐 서버 사용자 | `deploy` |
 
 #### SSH 키 생성 방법
 
-배포 서버에서:
+**각 배포 서버**에서 개별적으로 SSH 키를 생성하세요:
 ```bash
 # SSH 키 생성
 ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_actions
@@ -195,31 +227,38 @@ ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_actions
 cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 
-# 개인키 출력 (GitHub Secret에 등록)
+# 개인키 출력 (해당 서버의 GitHub Secret에 등록)
 cat ~/.ssh/github_actions
 ```
 
-### 3. Docker Compose 파일 작성
+### 3. Docker Compose 파일 확인
 
-프로젝트 루트에 `docker-compose.yml` 파일을 생성하세요:
+각 서비스 디렉토리에 docker-compose.yml 파일이 이미 생성되어 있습니다:
 
+#### 프론트엔드 ([frontend/docker-compose.yml](../frontend/docker-compose.yml))
 ```yaml
 version: '3.8'
 
 services:
   frontend:
     build:
-      context: .
+      context: ..
       dockerfile: frontend/Dockerfile
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+```
 
+#### 백엔드 ([backend/docker-compose.yml](../backend/docker-compose.yml))
+```yaml
+version: '3.8'
+
+services:
   api-server:
     build:
-      context: .
+      context: ..
       dockerfile: backend/api-server/Dockerfile
     ports:
       - "3001:3001"
@@ -229,17 +268,23 @@ services:
 
   ticket-server:
     build:
-      context: .
+      context: ..
       dockerfile: backend/ticket-server/Dockerfile
     ports:
       - "3002:3002"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+```
 
+#### 큐 서버 ([queue-backend/docker-compose.yml](../queue-backend/docker-compose.yml))
+```yaml
+version: '3.8'
+
+services:
   queue-backend:
     build:
-      context: .
+      context: ..
       dockerfile: queue-backend/Dockerfile
     ports:
       - "3003:3003"
