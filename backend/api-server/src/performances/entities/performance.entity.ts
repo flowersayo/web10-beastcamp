@@ -9,6 +9,8 @@ import {
 import { Venue } from '../../venues/entities/venue.entity';
 import { Session } from './session.entity';
 
+import { Grade } from './grade.entity';
+
 @Entity('performances')
 export class Performance {
   constructor(
@@ -48,4 +50,7 @@ export class Performance {
 
   @OneToMany(() => Session, (session) => session.performance)
   sessions: Session[];
+
+  @OneToMany(() => Grade, (grade) => grade.performance)
+  grades: Grade[];
 }
