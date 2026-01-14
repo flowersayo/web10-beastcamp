@@ -77,6 +77,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@beastcamp/shared-types$": "<rootDir>/../../packages/shared-types/src"
+    }
   }
 }
