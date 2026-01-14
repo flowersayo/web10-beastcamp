@@ -1,3 +1,5 @@
+import { API_PREFIX } from "@/constants/api";
+
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface ApiRequestOptions extends Omit<RequestInit, "method" | "body"> {
@@ -17,21 +19,17 @@ export class ApiError extends Error {
   }
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const BASE_URL = API_PREFIX || "";
 
 // 인증 절차가 어찌될진 아직 잘 모르지만 일단 localStorage와 sessionStorage를 사용한다 가정하고 진행
 // 추후 next auth사용해서 구현할 수도 있음 next auth 사용 시 코드 변경 필요
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
 
-
   return (
-    localStorage.getItem("queue_token") ||
-    sessionStorage.getItem("queue_token")
+    localStorage.getItem("queue_token") || sessionStorage.getItem("queue_token")
   );
-
 }
-
 
 function buildUrl(
   url: string,
@@ -75,7 +73,7 @@ async function request<T = unknown>(
     headers: {
       "Content-Type": "application/json",
       ...authHeaders,
-      ...headers, 
+      ...headers,
     },
     ...restOptions,
   };
@@ -87,9 +85,10 @@ async function request<T = unknown>(
   try {
     const response = await fetch(url, requestOptions);
 
-    if (!response.ok) { 
+    if (!response.ok) {
       let errorData: unknown;
-      try { // 응답이 json일 수도 아닐 수도 있음 
+      try {
+        // 응답이 json일 수도 아닐 수도 있음
         errorData = await response.json();
       } catch {
         errorData = await response.text();
@@ -103,7 +102,8 @@ async function request<T = unknown>(
       );
     }
 
-    if ( // 혹시 트래픽 테스트를 위해 응답이 비어있는 경우가 있을 수 있다고 생각함
+    if (
+      // 혹시 트래픽 테스트를 위해 응답이 비어있는 경우가 있을 수 있다고 생각함
       response.status === 204 ||
       response.headers.get("content-length") === "0"
     ) {
@@ -116,7 +116,6 @@ async function request<T = unknown>(
 
     return (await response.text()) as T; // 응답이 json이 아닐 경우
   } catch (error) {
-   
     if (error instanceof Error) {
       throw new ApiError(error.message, 0, "네트워크 오류");
     }
