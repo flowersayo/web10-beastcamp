@@ -1,7 +1,7 @@
-import { seatGrade } from "@/types/seat";
+import { SeatGrade } from "@/types/seat";
 
 export const gradeInfo: {
-  [K in seatGrade]: {
+  [K in SeatGrade]: {
     name: string;
     price: number;
     fillColor: string;
