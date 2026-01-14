@@ -6,10 +6,11 @@ import { Performance } from './entities/performance.entity';
 import { Session } from './entities/session.entity';
 import { Venue } from '../venues/entities/venue.entity';
 import { PerformancesRepository } from './performances.repository';
+import { SessionsRepository } from './sessions.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Performance, Session, Venue])],
   controllers: [PerformancesController],
-  providers: [PerformancesService, PerformancesRepository],
+  providers: [PerformancesService, PerformancesRepository, SessionsRepository],
 })
 export class PerformancesModule {}
