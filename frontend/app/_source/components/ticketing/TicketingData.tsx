@@ -5,7 +5,7 @@ import TicketingControls from "./TicketingControls";
 
 async function getLatestPerformance() {
   const response = await api.get<ResponsePerformances>(
-    `/api/mock/performances?limit=1`,
+    `/performances?limit=1`,
     { next: { revalidate: 3000 } }
   );
 
