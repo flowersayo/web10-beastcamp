@@ -1,4 +1,4 @@
-import { IsISO8601, IsNotEmpty } from 'class-validator';
+import { IsISO8601, IsNotEmpty, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSessionRequestDto {
@@ -9,4 +9,9 @@ export class CreateSessionRequestDto {
   @IsISO8601()
   @IsNotEmpty()
   sessionDate: string;
+
+  @ApiProperty({ description: '공연장 ID', example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  venue_id: number;
 }

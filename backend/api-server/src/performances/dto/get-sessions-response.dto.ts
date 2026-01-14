@@ -8,6 +8,9 @@ export class GetSessionsResponseDto {
   @ApiProperty({ description: '공연 ID', example: 1 })
   performanceId: number;
 
+  @ApiProperty({ description: '공연장 ID', example: 1 })
+  venueId: number;
+
   @ApiProperty({
     description: '공연 회차 일시 (ISO 8601)',
     example: '2026-01-14T19:00:00Z',
@@ -18,6 +21,7 @@ export class GetSessionsResponseDto {
     const dto = new GetSessionsResponseDto();
     dto.id = session.id;
     dto.performanceId = session.performanceId;
+    dto.venueId = session.venueId;
     dto.sessionDate = session.sessionDate;
     return dto;
   }

@@ -1,4 +1,4 @@
-import { IsISO8601, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsISO8601, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePerformanceRequestDto {
@@ -14,9 +14,4 @@ export class CreatePerformanceRequestDto {
   @IsISO8601()
   @IsNotEmpty()
   ticketing_date: string;
-
-  @ApiProperty({ description: '공연장 ID', example: 1 })
-  @IsNumber()
-  @IsNotEmpty()
-  venue_id: number;
 }
