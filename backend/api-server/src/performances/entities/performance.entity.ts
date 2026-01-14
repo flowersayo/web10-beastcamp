@@ -1,33 +1,15 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-} from 'typeorm';
-import { Venue } from '../../venues/entities/venue.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Session } from './session.entity';
-
-import { Grade } from './grade.entity';
 
 @Entity('performances')
 export class Performance {
-  constructor(
-    performanceName?: string,
-    ticketingDate?: Date,
-    venueId?: number,
-  ) {
+  constructor(performanceName?: string, ticketingDate?: Date) {
     if (performanceName) this.performanceName = performanceName;
     if (ticketingDate) this.ticketingDate = ticketingDate;
-    if (venueId) this.venueId = venueId;
   }
 
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ name: 'venue_id' })
-  venueId: number;
 
   @Column({
     type: 'varchar',
@@ -44,13 +26,6 @@ export class Performance {
   })
   ticketingDate: Date;
 
-  @ManyToOne(() => Venue)
-  @JoinColumn({ name: 'venue_id' })
-  venue: Venue;
-
   @OneToMany(() => Session, (session) => session.performance)
   sessions: Session[];
-
-  @OneToMany(() => Grade, (grade) => grade.performance)
-  grades: Grade[];
 }

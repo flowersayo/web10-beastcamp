@@ -6,18 +6,18 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-import { Performance } from './performance.entity';
+import { Session } from './session.entity';
 import { Block } from '../../venues/entities/block.entity';
 import { Grade } from './grade.entity';
 
 @Entity('block_grades')
-@Unique(['performanceId', 'blockId'])
+@Unique(['sessionId', 'blockId'])
 export class BlockGrade {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'performance_id' })
-  performanceId: number;
+  @Column({ name: 'session_id' })
+  sessionId: number;
 
   @Column({ name: 'block_id' })
   blockId: number;
@@ -25,9 +25,9 @@ export class BlockGrade {
   @Column({ name: 'grade_id' })
   gradeId: number;
 
-  @ManyToOne(() => Performance)
-  @JoinColumn({ name: 'performance_id' })
-  performance: Performance;
+  @ManyToOne(() => Session, (session) => session.blockGrades)
+  @JoinColumn({ name: 'session_id' })
+  session: Session;
 
   @ManyToOne(() => Block)
   @JoinColumn({ name: 'block_id' })

@@ -5,15 +5,15 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Performance } from './performance.entity';
+import { Session } from './session.entity';
 
 @Entity('grades')
 export class Grade {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'performance_id' })
-  performanceId: number;
+  @Column({ name: 'session_id' })
+  sessionId: number;
 
   @Column()
   name: string;
@@ -21,7 +21,7 @@ export class Grade {
   @Column()
   price: number;
 
-  @ManyToOne(() => Performance, (performance) => performance.grades)
-  @JoinColumn({ name: 'performance_id' })
-  performance: Performance;
+  @ManyToOne(() => Session, (session) => session.grades)
+  @JoinColumn({ name: 'session_id' })
+  session: Session;
 }
