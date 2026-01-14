@@ -32,18 +32,9 @@ export class PerformancesService {
   async create(
     requestDto: CreatePerformanceRequestDto,
   ): Promise<{ id: number }> {
-    // validate venue id
-    const venue = await this.venuesRepository.findOne({
-      where: { id: requestDto.venue_id },
-    });
-    if (!venue) {
-      throw new BadRequestException('Invalid venue id');
-    }
-
     const performance = new Performance(
       requestDto.performance_name,
       new Date(requestDto.ticketing_date),
-      requestDto.venue_id,
     );
     const savedPerformance =
       await this.performancesRepository.save(performance);
@@ -69,9 +60,17 @@ export class PerformancesService {
       throw new BadRequestException('Invalid performance id');
     }
 
+    const venue = await this.venuesRepository.findOne({
+      where: { id: requestDto.venue_id },
+    });
+    if (!venue) {
+      throw new BadRequestException('Invalid venue id');
+    }
+
     const session = new Session(
       performanceId,
       new Date(requestDto.sessionDate),
+      requestDto.venue_id,
     );
     const savedSession = await this.sessionsRepository.save(session);
     return { id: savedSession.id };
@@ -84,41 +83,40 @@ export class PerformancesService {
   }
 
   async createGrades(
-    performanceId: number,
+    sessionId: number,
     requestDtos: CreateGradeRequestDto[],
   ): Promise<void> {
-    const performance = await this.performancesRepository.findOne({
-      where: { id: performanceId },
+    const session = await this.sessionsRepository.findOne({
+      where: { id: sessionId },
     });
-    if (!performance) {
-      throw new BadRequestException('Invalid performance id');
+    if (!session) {
+      throw new BadRequestException('Invalid session id');
     }
 
-    await this.gradesRepository.createMany(performanceId, requestDtos);
+    await this.gradesRepository.createMany(sessionId, requestDtos);
   }
 
-  async getGrades(performanceId: number): Promise<GetGradeResponseDto[]> {
-    const grades =
-      await this.gradesRepository.findByPerformanceId(performanceId);
+  async getGrades(sessionId: number): Promise<GetGradeResponseDto[]> {
+    const grades = await this.gradesRepository.findBySessionId(sessionId);
     return GetGradeResponseDto.fromEntities(grades);
   }
 
   async createBlockGrades(
-    performanceId: number,
+    sessionId: number,
     requestDtos: CreateBlockGradeRequestDto[],
   ): Promise<void> {
-    const performance = await this.performancesRepository.findOne({
-      where: { id: performanceId },
+    const session = await this.sessionsRepository.findOne({
+      where: { id: sessionId },
     });
-    if (!performance) {
-      throw new BadRequestException('Invalid performance id');
+    if (!session) {
+      throw new BadRequestException('Invalid session id');
     }
 
     // Validation: Check for duplicates
     const allBlockIds = requestDtos.flatMap((dto) => dto.blockIds);
     const existingMappings =
-      await this.blockGradesRepository.findByPerformanceAndBlocks(
-        performanceId,
+      await this.blockGradesRepository.findBySessionAndBlocks(
+        sessionId,
         allBlockIds,
       );
 
@@ -134,14 +132,12 @@ export class PerformancesService {
       dto.blockIds.map((blockId) => ({ gradeId: dto.gradeId, blockId })),
     );
 
-    await this.blockGradesRepository.createMany(performanceId, mappings);
+    await this.blockGradesRepository.createMany(sessionId, mappings);
   }
 
-  async getBlockGrades(
-    performanceId: number,
-  ): Promise<GetBlockGradeResponseDto[]> {
+  async getBlockGrades(sessionId: number): Promise<GetBlockGradeResponseDto[]> {
     const blockGrades =
-      await this.blockGradesRepository.findByPerformanceId(performanceId);
+      await this.blockGradesRepository.findBySessionId(sessionId);
     return GetBlockGradeResponseDto.fromEntities(blockGrades);
   }
 }

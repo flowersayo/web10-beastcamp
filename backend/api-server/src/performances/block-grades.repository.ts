@@ -11,12 +11,12 @@ export class BlockGradesRepository {
   ) {}
 
   async createMany(
-    performanceId: number,
+    sessionId: number,
     mappings: { gradeId: number; blockId: number }[],
   ): Promise<BlockGrade[]> {
     const entities = mappings.map((m) =>
       this.repository.create({
-        performanceId,
+        sessionId,
         gradeId: m.gradeId,
         blockId: m.blockId,
       }),
@@ -24,15 +24,15 @@ export class BlockGradesRepository {
     return this.repository.save(entities);
   }
 
-  async findByPerformanceId(performanceId: number): Promise<BlockGrade[]> {
+  async findBySessionId(sessionId: number): Promise<BlockGrade[]> {
     return this.repository.find({
-      where: { performanceId },
+      where: { sessionId },
       relations: ['grade', 'block'],
     });
   }
 
-  async findByPerformanceAndBlocks(
-    performanceId: number,
+  async findBySessionAndBlocks(
+    sessionId: number,
     blockIds: number[],
   ): Promise<BlockGrade[]> {
     if (blockIds.length === 0) {
@@ -40,7 +40,7 @@ export class BlockGradesRepository {
     }
     return this.repository.find({
       where: {
-        performanceId,
+        sessionId,
         blockId: In(blockIds),
       },
     });

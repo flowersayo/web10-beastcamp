@@ -11,21 +11,21 @@ export class GradesRepository {
   ) {}
 
   async createMany(
-    performanceId: number,
+    sessionId: number,
     grades: { name: string; price: number }[],
   ): Promise<Grade[]> {
     const gradeEntities = grades.map((grade) =>
       this.repository.create({
         ...grade,
-        performanceId,
+        sessionId,
       }),
     );
     return this.repository.save(gradeEntities);
   }
 
-  async findByPerformanceId(performanceId: number): Promise<Grade[]> {
+  async findBySessionId(sessionId: number): Promise<Grade[]> {
     return this.repository.find({
-      where: { performanceId },
+      where: { sessionId },
     });
   }
 }
