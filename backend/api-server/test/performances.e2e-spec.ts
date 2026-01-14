@@ -25,7 +25,6 @@ describe('공연 (Performances) API', () => {
     let venueId: number;
 
     beforeAll(async () => {
-      // 공연 생성을 위해 미리 공연장(Venue)을 하나 생성합니다.
       const venueResponse = await request(app.getHttpServer() as App)
         .post('/api/venues')
         .send({ venue_name: '테스트 공연장' });
@@ -64,7 +63,6 @@ describe('공연 (Performances) API', () => {
 
       beforeAll(async () => {
         const invalidBody = {
-          // performance_name 누락
           ticketing_date: new Date().toISOString(),
           venue_id: venueId,
         };
@@ -95,13 +93,11 @@ describe('공연 (Performances) API', () => {
     dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
     beforeAll(async () => {
-      // 1. 공연장 생성
       const venueRes = await request(app.getHttpServer() as App)
         .post('/api/venues')
         .send({ venue_name: '검색 테스트용 공연장' });
       venueId = (venueRes.body as { id: number }).id;
 
-      // 2. 공연 데이터 3개 생성 (과거, 미래, 먼 미래)
       const createPerformance = async (name: string, date: Date) => {
         const res = await request(app.getHttpServer() as App)
           .post('/api/performances')
@@ -175,6 +171,65 @@ describe('공연 (Performances) API', () => {
           performances: { performance_id: number }[];
         };
         expect(body.performances[0].performance_id).toBe(futurePerformanceId);
+      });
+    });
+  });
+
+  describe('공연 회차 (Sessions) API', () => {
+    let performanceId: number;
+
+    beforeAll(async () => {
+      const venueRes = await request(app.getHttpServer() as App)
+        .post('/api/venues')
+        .send({ venue_name: '회차 테스트 공연장' });
+      const venueId = (venueRes.body as { id: number }).id;
+
+      const perfRes = await request(app.getHttpServer() as App)
+        .post('/api/performances')
+        .send({
+          performance_name: '회차 테스트 공연',
+          ticketing_date: new Date().toISOString(),
+          venue_id: venueId,
+        });
+      performanceId = (perfRes.body as { id: number }).id;
+    });
+
+    describe('POST /api/performances/:id/sessions 요청 시', () => {
+      describe('유효한 회차 정보가 주어지면', () => {
+        let response: request.Response;
+
+        beforeAll(async () => {
+          response = await request(app.getHttpServer() as App)
+            .post(`/api/performances/${performanceId}/sessions`)
+            .send({ sessionDate: new Date().toISOString() });
+        });
+
+        it('HTTP 상태 코드 201을 반환해야 한다', () => {
+          expect(response.status).toBe(201);
+        });
+
+        it('응답 본문에 생성된 회차 ID가 포함되어야 한다', () => {
+          const body = response.body as { id: number };
+          expect(body.id).toBeDefined();
+        });
+      });
+    });
+
+    describe('GET /api/performances/:id/sessions 요청 시', () => {
+      let response: request.Response;
+
+      beforeAll(async () => {
+        response = await request(app.getHttpServer() as App).get(
+          `/api/performances/${performanceId}/sessions`,
+        );
+      });
+
+      it('HTTP 상태 코드 200을 반환해야 한다', () => {
+        expect(response.status).toBe(200);
+      });
+
+      it('회차 목록이 배열 형태로 반환되어야 한다', () => {
+        expect(Array.isArray(response.body)).toBe(true);
       });
     });
   });
