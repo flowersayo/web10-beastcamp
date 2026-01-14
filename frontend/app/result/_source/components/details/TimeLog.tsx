@@ -1,14 +1,10 @@
-import { Clock } from "lucide-react";
-import { ITimeLog } from "../../types/resultType";
+"use client";
 
-export const timeLog: ITimeLog = {
-  queue: 111,
-  captcha: 222,
-  seats: 333,
-};
+import { Clock } from "lucide-react";
+import { useTimeLog } from "../../hooks/useTimeLog";
 
 export default function TimeLog() {
-  const totalTime = Object.values(timeLog).reduce((a, b) => a + b, 0);
+  const { timeLog, totalTime } = useTimeLog();
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6">
@@ -21,10 +17,11 @@ export default function TimeLog() {
           <span className="text-gray-600">대기열 통과</span>
           <span>{timeLog.queue?.toFixed(1)}초</span>
         </div>
-        <div className="flex justify-between items-center">
+        {/* 보안 문자 섹션 개발 후 적용 */}
+        {/* <div className="flex justify-between items-center">
           <span className="text-gray-600">보안문자 입력</span>
           <span>{timeLog.captcha?.toFixed(1)}초</span>
-        </div>
+        </div> */}
         <div className="flex justify-between items-center">
           <span className="text-gray-600">좌석 선택</span>
           <span>{timeLog.seats?.toFixed(1)}초</span>
