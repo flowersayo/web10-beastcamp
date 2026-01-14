@@ -15,18 +15,10 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 interface PerformanceInfoProps {
-  performance?: Performance;
+  performance: Performance;
 }
 
 export default function PerformanceInfo({ performance }: PerformanceInfoProps) {
-  if (!performance) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-white/60">공연 정보를 불러오는 중...</p>
-      </div>
-    );
-  }
-
   const performanceDate = new Date(performance.performance_date);
 
   console.log(performanceDate);
@@ -57,27 +49,6 @@ export default function PerformanceInfo({ performance }: PerformanceInfoProps) {
           <MapPin className="w-5 h-5 text-white/80" />
           <span>{performance.venue_name}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <DollarSign className="w-5 h-5 text-white/80" />
-          <span>99,000원 ~ 154,000원</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg text-sm">
-          콘서트
-        </span>
-        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg text-sm">
-          인터파크
-        </span>
-        <span
-          className={`${getDifficultyColor(
-            "상"
-          )} px-3 py-1 rounded-lg text-sm flex items-center gap-1`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          난이도: 상
-        </span>
       </div>
     </div>
   );
