@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PerformancesController } from './performances.controller';
+import { SessionsController } from './sessions.controller';
 import { PerformancesService } from './performances.service';
 import { Performance } from './entities/performance.entity';
 import { Session } from './entities/session.entity';
@@ -16,7 +17,7 @@ import { PerformancesRepository } from './performances.repository';
   imports: [
     TypeOrmModule.forFeature([Performance, Venue, Session, Grade, BlockGrade]),
   ],
-  controllers: [PerformancesController],
+  controllers: [PerformancesController, SessionsController],
   providers: [
     PerformancesService,
     PerformancesRepository,
