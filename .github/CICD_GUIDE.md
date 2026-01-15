@@ -57,8 +57,10 @@ web10-beastcamp/
    - 각 서비스별로 독립적인 Job 실행:
      - Lint 검사
      - 단위 테스트
-     - 빌드 테스트
-     - Docker 이미지 빌드 테스트
+     - Next.js 빌드 (Frontend만)
+     - **Docker 이미지 빌드 및 푸시**
+       - `feature` → `dev`: 빌드 테스트만 (푸시 안 함)
+       - `dev` → `main`: 빌드 후 NCP Registry에 푸시 (Frontend만)
 
 3. **CI 결과 요약**
    - 모든 CI 작업 결과 취합
@@ -78,11 +80,11 @@ web10-beastcamp/
 
    **Frontend (NCP Container Registry 사용):**
 
-   - GitHub Actions Runner에서 Docker 이미지 빌드
-   - NCP Container Registry에 이미지 푸시 (태그: `latest`, `{commit-sha}`)
-   - SSH로 프론트엔드 서버에 접속
-   - 서버에서 Registry로부터 이미지 pull 및 실행
-   - **장점**: 빌드 시간 단축 (소형 서버 부담 감소), 빌드 캐싱 활용
+   - **CI 단계(dev→main PR)에서 이미 이미지 빌드 및 푸시 완료**
+   - CD는 SSH로 프론트엔드 서버에 접속
+   - 서버에서 CI가 푸시한 이미지를 Registry로부터 pull
+   - 컨테이너 실행 (태그: `{commit-sha}`)
+   - **장점**: 빌드 시간 단축 (소형 서버 부담 감소), CI에서 빌드 완료 후 배포만 수행
 
    **Backend Services (서버 빌드 방식):**
 
@@ -161,13 +163,13 @@ pnpm --filter @beastcamp/api-server... build
 
 - **이유**: 프론트엔드 서버 스펙이 작아 빌드 시간이 과도하게 소요 (1시간+)
 - **방식**:
-  - GitHub Actions Runner에서 이미지 빌드
-  - NCP Container Registry에 푸시
-  - 프론트엔드 서버는 이미지만 pull하여 실행
+  - **CI 단계 (dev→main PR)**: GitHub Actions Runner에서 이미지 빌드 및 NCP Registry에 푸시
+  - **CD 단계 (main merge)**: 프론트엔드 서버는 CI가 푸시한 이미지를 pull하여 실행
 - **장점**:
   - 빌드 시간 대폭 단축 (GitHub Actions의 고성능 환경 활용)
   - Registry의 빌드 캐시 활용 가능
   - 서버 리소스 부담 최소화
+  - CI 통과 = 이미지 검증 완료, CD는 검증된 이미지만 배포
 
 #### Backend Services: 서버 직접 빌드
 
@@ -390,14 +392,20 @@ git add frontend/
 git commit -m "feat: 메인 페이지 UI 개선"
 git push origin feature/improve-ui
 
-# PR 생성 → CI 실행 (frontend만)
-# ✅ CI - Frontend: lint, build
+# feature -> dev PR 생성 → CI 실행 (frontend만)
+# ✅ CI - Frontend: lint, Next.js build, Docker build (푸시 안 함)
 # ⏭️  CI - API Server: skipped
 # ⏭️  CI - Ticket Server: skipped
 # ⏭️  CI - Queue Backend: skipped
 
-# PR merge → CD 실행 (frontend만)
-# 🚀 Deploy - Frontend: SSH → git pull → docker-compose build/up
+# dev에 merge 후, dev -> main PR 생성 → CI 실행
+# ✅ CI - Frontend: lint, Next.js build, Docker build + NCP Registry 푸시
+# ⏭️  CI - API Server: skipped
+# ⏭️  CI - Ticket Server: skipped
+# ⏭️  CI - Queue Backend: skipped
+
+# main에 merge → CD 실행 (frontend만)
+# 🚀 Deploy - Frontend: SSH → CI가 푸시한 이미지 pull → 컨테이너 실행
 # ⏭️  Deploy - API Server: skipped
 # ⏭️  Deploy - Ticket Server: skipped
 # ⏭️  Deploy - Queue Backend: skipped
@@ -411,13 +419,19 @@ git add packages/shared-types/
 git commit -m "feat: 새로운 타입 추가"
 git push origin feature/add-types
 
-# PR 생성 → CI 실행 (의존 서비스들만)
+# feature -> dev PR 생성 → CI 실행 (의존 서비스들만)
 # ⏭️  CI - Frontend: skipped
-# ✅ CI - API Server: lint, test, build
-# ✅ CI - Ticket Server: lint, test, build
+# ✅ CI - API Server: lint, test, build, Docker build
+# ✅ CI - Ticket Server: lint, test, build, Docker build
 # ⏭️  CI - Queue Backend: skipped
 
-# PR merge → CD 실행 (의존 서비스들만)
+# dev에 merge 후, dev -> main PR 생성 → CI 실행 (이미지 푸시 없음, 백엔드는 서버 빌드 방식)
+# ⏭️  CI - Frontend: skipped
+# ✅ CI - API Server: lint, test, build, Docker build
+# ✅ CI - Ticket Server: lint, test, build, Docker build
+# ⏭️  CI - Queue Backend: skipped
+
+# main에 merge → CD 실행 (의존 서비스들만)
 # ⏭️  Deploy - Frontend: skipped
 # 🚀 Deploy - API Server: SSH → git pull → docker-compose build/up
 # 🚀 Deploy - Ticket Server: SSH → git pull → docker-compose build/up
@@ -432,14 +446,20 @@ git add frontend/ backend/api-server/
 git commit -m "feat: 사용자 인증 기능 추가"
 git push origin feature/auth
 
-# PR 생성 → CI 실행 (병렬)
-# ✅ CI - Frontend: lint, build
-# ✅ CI - API Server: lint, test, build
+# feature -> dev PR 생성 → CI 실행 (병렬)
+# ✅ CI - Frontend: lint, Next.js build, Docker build (푸시 안 함)
+# ✅ CI - API Server: lint, test, build, Docker build
 # ⏭️  CI - Ticket Server: skipped
 # ⏭️  CI - Queue Backend: skipped
 
-# PR merge → CD 실행 (병렬)
-# 🚀 Deploy - Frontend: SSH → git pull → docker-compose build/up
+# dev에 merge 후, dev -> main PR 생성 → CI 실행 (병렬)
+# ✅ CI - Frontend: lint, Next.js build, Docker build + NCP Registry 푸시
+# ✅ CI - API Server: lint, test, build, Docker build
+# ⏭️  CI - Ticket Server: skipped
+# ⏭️  CI - Queue Backend: skipped
+
+# main에 merge → CD 실행 (병렬)
+# 🚀 Deploy - Frontend: SSH → CI가 푸시한 이미지 pull → 컨테이너 실행
 # 🚀 Deploy - API Server: SSH → git pull → docker-compose build/up
 # ⏭️  Deploy - Ticket Server: skipped
 # ⏭️  Deploy - Queue Backend: skipped
@@ -522,9 +542,10 @@ git push origin feature/auth
 - **명확한 영향 범위**: 어떤 서비스가 배포되는지 명확
 - **안전한 배포**: 의존성 변경 시 자동으로 연관 서비스 재배포
 - **하이브리드 전략**: 서비스 특성에 맞는 최적의 배포 방식 선택
-  - Frontend: Registry로 빌드 시간 최소화
+  - Frontend: CI에서 빌드 및 검증 완료, CD는 검증된 이미지만 배포
   - Backend: 서버 직접 빌드로 간단한 설정
 - **빌드 캐싱**: Frontend는 Registry의 빌드 캐시 활용 가능
+- **검증된 배포**: CI 통과 = 이미지 검증 완료, CD는 이미 검증된 아티팩트만 배포
 
 ### 단점 / 고려사항 ⚠️
 
