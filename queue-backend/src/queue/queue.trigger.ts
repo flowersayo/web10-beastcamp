@@ -32,10 +32,6 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  /**
-   * 트리거 1: 주기적 폴링 (Cron 사용)
-   * 1초마다 실행 (가장 짧은 주기)
-   */
   @Cron(CronExpression.EVERY_SECOND)
   async handleCron() {
     await this.worker.processQueueTransfer();
