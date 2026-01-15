@@ -3,21 +3,27 @@ import { isSunday } from "date-fns";
 import { ko } from "date-fns/locale";
 import { ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { Session } from "@/types/performance";
 
 interface DateSelectorProps {
   selectedDate: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
-  performanceDate?: string;
+  sessions?: Session[];
 }
 
 export default function DateSelector({
   selectedDate,
   onDateSelect,
-  performanceDate,
+  sessions,
 }: DateSelectorProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const pDate = performanceDate ? new Date(performanceDate) : undefined;
+  const availableDates =
+    sessions?.map((s) => new Date(s.sessionDate).toDateString()) || [];
+  const defaultMonth =
+    sessions && sessions.length > 0
+      ? new Date(sessions[0].sessionDate)
+      : undefined;
 
   return (
     <div className="mb-4 bg-white rounded-xl p-4 text-gray-900 min-w-80">
@@ -40,7 +46,7 @@ export default function DateSelector({
             selected={selectedDate}
             onSelect={(date) => onDateSelect(date)}
             className="rounded-md border shadow-sm border-"
-            defaultMonth={pDate}
+            defaultMonth={defaultMonth}
             locale={ko}
             classNames={{
               weekdays: "flex bg-gray-50 p-1 rounded-r-full rounded-l-full",
@@ -55,12 +61,7 @@ export default function DateSelector({
               isSunday: "text-red-500",
             }}
             disabled={(date) => {
-              if (!pDate) return true;
-              return (
-                date.getFullYear() !== pDate.getFullYear() ||
-                date.getMonth() !== pDate.getMonth() ||
-                date.getDate() !== pDate.getDate()
-              );
+              return !availableDates.includes(date.toDateString());
             }}
           />
         </div>

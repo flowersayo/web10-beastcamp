@@ -5,15 +5,20 @@ import { useCountdown } from "../../hooks/useCountdown";
 import CountdownTimer from "./CountdownTimer";
 import DateSelector from "./DateSelector";
 import RoundSelector from "./RoundSelector";
-import type { Performance } from "@/types/performance";
+import type { Performance, Session } from "@/types/performance";
+import { useRouter } from "next/navigation";
 
 interface TicketingControlsProps {
   performance?: Performance;
+  sessions?: Session[];
 }
 
 export default function TicketingControls({
   performance,
+  sessions,
 }: TicketingControlsProps) {
+  const router = useRouter();
+
   const { timeLeft, isActive } = useCountdown(performance?.ticketing_date);
   const [showDateSelection, setShowDateSelection] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -21,7 +26,7 @@ export default function TicketingControls({
 
   const handleConfirm = () => {
     if (selectedDate && selectedRound) {
-      // TODO: 예매 처리
+      router.push("/waiting-queue");
       console.log("예매 확정:", { selectedDate, selectedRound });
     }
   };
@@ -29,6 +34,13 @@ export default function TicketingControls({
   const handleBackToCountdown = () => {
     setShowDateSelection(false);
     setSelectedDate(undefined);
+    setSelectedRound(null);
+  };
+
+  const onDateSelect = (date: Date | undefined) => {
+    if (date === selectedDate) return;
+    if (!date) return;
+    setSelectedDate(date);
     setSelectedRound(null);
   };
 
@@ -73,13 +85,15 @@ export default function TicketingControls({
         <div className=" w-fit">
           <DateSelector
             selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            performanceDate={performance?.performance_date}
+            onDateSelect={onDateSelect}
+            sessions={sessions}
           />
 
           <RoundSelector
             selectedRound={selectedRound}
             onRoundSelect={setSelectedRound}
+            sessions={sessions}
+            selectedDate={selectedDate}
           />
 
           <div className="flex gap-2">
