@@ -31,7 +31,10 @@ jobs:
         id: detect
         run: |
           chmod +x .github/scripts/detect-changes.sh
-          .github/scripts/detect-changes.sh origin/main
+          # PR의 base 브랜치와 비교 (feature->dev는 dev와, dev->main은 main과 비교)
+          BASE_BRANCH="origin/${{ github.base_ref }}"
+          echo "Comparing with base branch: $BASE_BRANCH"
+          .github/scripts/detect-changes.sh "$BASE_BRANCH"
 
   # Frontend CI
   ci-frontend:

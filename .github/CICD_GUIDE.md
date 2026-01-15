@@ -40,14 +40,16 @@ web10-beastcamp/
 
 ### 1. CI 워크플로우 (Pull Request)
 
-**트리거:** PR 생성 또는 업데이트 (→ main, develop)
+**트리거:** PR 생성 또는 업데이트 (→ main, dev)
 
 **동작 과정:**
 
 1. **변경 감지**
 
    - `detect-changes.sh` 스크립트 실행
-   - main 브랜치와 비교하여 변경된 파일 분석
+   - **PR의 target 브랜치(base)와 비교**하여 변경된 파일 분석
+     - `feature` → `dev` PR: dev 브랜치와 비교
+     - `dev` → `main` PR: main 브랜치와 비교
    - 영향받는 서비스 목록 생성
 
 2. **병렬 CI 실행**
@@ -57,6 +59,7 @@ web10-beastcamp/
      - Lint 검사
      - 단위 테스트
      - 빌드 테스트
+     - Docker 이미지 빌드 테스트
 
 3. **CI 결과 요약**
    - 모든 CI 작업 결과 취합
