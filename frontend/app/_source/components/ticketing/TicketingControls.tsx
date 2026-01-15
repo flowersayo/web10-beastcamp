@@ -6,6 +6,7 @@ import CountdownTimer from "./CountdownTimer";
 import DateSelector from "./DateSelector";
 import RoundSelector from "./RoundSelector";
 import type { Performance } from "@/types/performance";
+import { useRouter } from "next/navigation";
 
 interface TicketingControlsProps {
   performance?: Performance;
@@ -19,10 +20,13 @@ export default function TicketingControls({
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [selectedRound, setSelectedRound] = useState<string | null>(null);
 
+  const router = useRouter();
+
   const handleConfirm = () => {
     if (selectedDate && selectedRound) {
       // TODO: 예매 처리
       console.log("예매 확정:", { selectedDate, selectedRound });
+      router.push("/waiting-queue");
     }
   };
 
