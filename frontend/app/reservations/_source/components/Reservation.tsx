@@ -24,6 +24,7 @@ export default async function Reservation() {
       blockGrades={blockGrades}
       grades={grades}
     >
+      <ReservationTimeTracker />
       <div className="h-screen flex flex-col overflow-hidden">
         <ReservationHeader />
         <div className="flex-1 flex overflow-hidden min-h-0">
