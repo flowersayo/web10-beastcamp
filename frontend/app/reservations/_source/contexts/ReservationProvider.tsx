@@ -66,8 +66,8 @@ export function ReservationProvider({
 
   const handleClickReserve = () => {
     try {
-      throw new Error("예매 실패");
-      // unreachable logic
+      // throw new Error("예매 실패");
+      router.push("/result");
     } catch (e) {
       console.error(e);
       alert("예매에 실패했습니다. 다시 시도해주세요.");

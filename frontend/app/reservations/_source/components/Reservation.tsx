@@ -1,5 +1,6 @@
 import { ReservationProvider } from "../contexts/ReservationProvider";
 import ReservationHeader from "./ReservationHeader";
+import ReservationTimeTracker from "./ReservationTimeTracker";
 import ReservationStage from "./stage/ReservationStage";
 import ReservationSidebar from "./sidebar/ReservationSidebar";
 import { getLatestPerformance, getSessions } from "@/services/performance";
