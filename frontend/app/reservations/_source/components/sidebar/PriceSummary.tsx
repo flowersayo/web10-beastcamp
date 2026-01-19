@@ -1,13 +1,13 @@
 "use client";
 
-import { useReservation } from "../../contexts/ReservationProvider";
+import { useReservationAction } from "../../contexts/ReservationProvider";
 
 export default function PriceSummary() {
-  const { selectedSeats } = useReservation();
+  const { selectedSeats } = useReservationAction();
 
   const totalPrice = Array.from(selectedSeats.values()).reduce(
     (sum, seat) => sum + seat.seatGrade.price,
-    0
+    0,
   );
 
   return (

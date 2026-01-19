@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { useReservation } from "../../contexts/ReservationProvider";
+import {
+  useReservationData,
+  useReservationAction,
+} from "../../contexts/ReservationProvider";
 import AreaSeats from "./AreaSeats";
 import { gradeInfoColor } from "../../data/seat";
 
 export default function StageMap() {
-  const { venue, handleSelectArea, isShowArea, blockGrades, selectedSeats } =
-    useReservation();
+  const { venue, blockGrades } = useReservationData();
+  const { handleSelectArea, isShowArea, selectedSeats } =
+    useReservationAction();
+
   console.log(selectedSeats);
   const blockMapUrl = venue?.blockMapUrl;
 
@@ -49,7 +54,7 @@ export default function StageMap() {
       ([name, color]) => `
         [data-block-name="${name}"] { fill: ${color} !important; transition: opacity 0.2s; } 
         [data-block-name="${name}"]:hover { cursor: pointer; }
-      `
+      `,
     )
     .join("\n");
 
@@ -75,7 +80,7 @@ export default function StageMap() {
 
                   if (blockName) {
                     const block = venue?.blocks.find(
-                      (b) => b.blockDataName === blockName
+                      (b) => b.blockDataName === blockName,
                     );
                     if (block) {
                       handleSelectArea(String(block.id));

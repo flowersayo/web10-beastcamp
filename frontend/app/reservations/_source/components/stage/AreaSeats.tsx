@@ -1,19 +1,16 @@
 "use client";
 
-import { useReservation } from "../../contexts/ReservationProvider";
+import {
+  useReservationData,
+  useReservationAction,
+} from "../../contexts/ReservationProvider";
 import { gradeInfoColor } from "../../data/seat";
 import { Seat } from "../../types/reservationType";
 
 export default function AreaSeats() {
-  const {
-    area,
-    handleDeselectArea,
-    selectedSeats,
-    handleToggleSeat,
-    venue,
-    blockGrades,
-    grades,
-  } = useReservation();
+  const { venue, blockGrades, grades } = useReservationData();
+  const { area, handleDeselectArea, selectedSeats, handleToggleSeat } =
+    useReservationAction();
 
   const targetBlock = venue?.blocks.find((b) => String(b.id) === area);
   const blockGrade = blockGrades?.find((bg) => bg.blockId === targetBlock?.id);

@@ -1,9 +1,9 @@
 "use client";
 
-import { useReservation } from "../../contexts/ReservationProvider";
+import { useReservationAction } from "../../contexts/ReservationProvider";
 
 export default function ReserveButton() {
-  const { selectedSeats, handleClickReserve } = useReservation();
+  const { selectedSeats, handleClickReserve } = useReservationAction();
 
   return (
     <>

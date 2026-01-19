@@ -1,10 +1,10 @@
 "use client";
 
-import { useReservation } from "../../contexts/ReservationProvider";
+import { useReservationAction } from "../../contexts/ReservationProvider";
 import { RESERVATION_LIMIT } from "../../constants/reservationConstants";
 
 export default function SelectedSeatCount() {
-  const { selectedSeats } = useReservation();
+  const { selectedSeats } = useReservationAction();
 
   return (
     <div className="text-sm text-gray-500">
