@@ -1,54 +1,32 @@
-"use client";
+import { useEffect } from "react";
+import { useCurrentQueue, useEnterQueue } from "../queries/position";
 
-import { get } from "@/lib/api";
-import { useEffect, useRef, useState } from "react";
+export const useWaitingQueue = () => {
+  // 1. 대기열 진입 (Mutation)
+  const {
+    mutate,
+    data: entryData, // ⭐️ 여기에 "최초 진입 순번"이 들어있습니다.
+    isSuccess: isEntrySuccess,
+    isError,
+  } = useEnterQueue();
 
-interface WaitingOrderResponse {
-  order: number;
-}
+  const { data: currentData } = useCurrentQueue(isEntrySuccess);
 
-/**
- * 대기 순번 조회를 위한 커스텀 훅
- */
-export function useWaitingQueue() {
-  const [data, setData] = useState<WaitingOrderResponse | undefined>(undefined);
-  const [isError, setIsError] = useState<boolean>(false);
-  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-
+  // 3. 마운트 시 자동 진입 시도
   useEffect(() => {
-    const poll = async () => {
-      let shouldPollAgain = true;
-      try {
-        const response = await get<WaitingOrderResponse>(`/waiting`);
-        setData(response);
-
-        if (response.order <= 0) {
-          shouldPollAgain = false;
-        }
-      } catch (error) {
-        setIsError(true);
-        console.error(error);
-      }
-
-      if (shouldPollAgain) {
-        timeoutIdRef.current = setTimeout(poll, 2000);
-      }
-    };
-
-    poll();
-
-    return () => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-      }
-    };
-  }, []);
-
-  const isFinished = data !== undefined && data.order <= 0;
+    mutate();
+  }, [mutate]);
 
   return {
-    data,
-    isError,
-    isFinished,
+    // 상태값들
+    isLoading: !isEntrySuccess && !isError, // 진입 중
+    isError, // 에러 발생
+
+    // 데이터들
+    initialOrder: entryData?.position, // ⭐️ 최초 순번 (ProgressBar의 max)
+    currentOrder: currentData?.position, // ⭐️ 현재 순번 (ProgressBar의 value)
+
+    // 완료 여부 (순번이 0이거나 완료 상태)
+    isFinished: currentData?.position === 0,
   };
-}
+};
