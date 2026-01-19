@@ -18,6 +18,10 @@ export class RedisService implements OnModuleDestroy {
     return result === 1;
   }
 
+  async set(key: string, value: string): Promise<string> {
+    return this.client.set(key, value);
+  }
+
   async get(key: string): Promise<string | null> {
     return this.client.get(key);
   }

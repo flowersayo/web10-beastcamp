@@ -8,6 +8,7 @@ describe('RedisService', () => {
 
   const mockRedisClient = {
     setnx: jest.fn(),
+    set: jest.fn(),
     get: jest.fn(),
     del: jest.fn(),
     flushall: jest.fn(),
@@ -58,6 +59,15 @@ describe('RedisService', () => {
         const result = await service.setNx(key, userId);
         expect(result).toBe(false);
       });
+    });
+  });
+
+  describe('set 호출 시', () => {
+    it('값을 무조건 저장하고 "OK"를 반환해야 한다', async () => {
+      mockRedis.set.mockResolvedValue('OK');
+      const result = await service.set('key', 'value');
+      expect(result).toBe('OK');
+      expect(mockRedis.set).toHaveBeenCalledWith('key', 'value');
     });
   });
 
