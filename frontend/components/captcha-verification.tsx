@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { fetchCaptcha, verifyCaptcha } from '@/lib/ticket-service';
 
 interface CaptchaVerificationProps {
@@ -73,8 +74,10 @@ export function CaptchaVerification({
       const result = await verifyCaptcha(captchaId, userInput);
 
       if (result.success) {
+        toast.success('보안 문자 검증 성공');
         onVerified();
       } else {
+        toast.error(result.message);
         setError(result.message);
         onError?.(result.message);
         // 실패 시 새로운 보안 문자 로드
@@ -83,6 +86,7 @@ export function CaptchaVerification({
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : '보안 문자 검증에 실패했습니다.';
+      toast.error(errorMsg);
       setError(errorMsg);
       onError?.(errorMsg);
       // 에러 시에도 새로운 보안 문자 로드

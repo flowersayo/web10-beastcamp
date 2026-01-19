@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import useSelection from "@/hooks/useSelector";
 import { Seat } from "../types/reservationType";
 import { RESERVATION_LIMIT } from "../constants/reservationConstants";
@@ -36,7 +37,7 @@ export function ReservationProvider({ children }: ReservationProviderProps) {
   const handleClickReserve = () => {
     // 좌석 선택 확인
     if (selectedSeats.size === 0) {
-      alert("좌석을 선택해주세요.");
+      toast.error("좌석을 선택해주세요.");
       return;
     }
 
@@ -45,7 +46,7 @@ export function ReservationProvider({ children }: ReservationProviderProps) {
       router.push("/result");
     } catch (e) {
       console.error(e);
-      alert("예매에 실패했습니다. 다시 시도해주세요.");
+      toast.error("예매에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
