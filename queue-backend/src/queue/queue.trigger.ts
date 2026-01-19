@@ -24,10 +24,15 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     this.subClient = this.redis.duplicate();
     await this.subClient.subscribe('channel:finish');
 
-    this.subClient.on('message', (channel) => {
+    this.subClient.on('message', (channel: string, message: string) => {
       if (channel === 'channel:finish') {
         this.logger.log('🔔 작업 완료 메시지 수신 - 즉시 이동 시도');
-        void this.worker.processQueueTransfer();
+        void (async () => {
+          await this.worker.removeActiveUser(message);
+          await this.worker.processQueueTransfer();
+        })().catch((err: Error) => {
+          this.logger.error(`🚨 [트리거 오류] message: ${message}`, err.stack);
+        });
       }
     });
   }

@@ -14,6 +14,7 @@ interface RedisWithCommands extends Redis {
 @Injectable()
 export class QueueWorker {
   private readonly logger = new Logger(QueueWorker.name);
+  private isActive = false;
   private MAX_CAPACITY = 10; // 활성 큐 최대 용량
 
   constructor(
@@ -21,6 +22,13 @@ export class QueueWorker {
   ) {}
 
   async processQueueTransfer() {
+    if (this.isActive) {
+      this.logger.debug('🚫 이미 활성 큐 처리 중입니다.');
+      return;
+    }
+
+    this.isActive = true;
+
     try {
       const movedUsers = await this.redis.transferUser(
         REDIS_KEYS.WAITING_QUEUE,
@@ -36,6 +44,29 @@ export class QueueWorker {
       }
     } catch (error) {
       this.logger.error('대기열 스케줄링 중 오류 발생:', error);
+    }
+
+    this.isActive = false;
+  }
+
+  async removeActiveUser(userId: string) {
+    if (!userId) {
+      return;
+    }
+
+    const statusKey = `status:active:${userId}`;
+
+    try {
+      const removed = await this.redis.zrem(REDIS_KEYS.ACTIVE_QUEUE, userId);
+      await this.redis.del(statusKey);
+
+      if (removed > 0) {
+        this.logger.log(
+          `🛑 [퇴장] 유저 ${userId}님을 활성 큐에서 제거했습니다.`,
+        );
+      }
+    } catch (error) {
+      this.logger.error('활성 큐 제거 중 오류 발생:', error);
     }
   }
 }
