@@ -34,7 +34,7 @@ export default function AreaSeats() {
         id: seatId,
         seatGrade: grades.find((g) => g.id + "" === gradeKey) || grades[0],
         rowNum: r + "",
-        seatNum: c + "",
+        colNum: c + "",
         blockNum: targetBlock.blockDataName,
       });
     }
@@ -80,7 +80,7 @@ export default function AreaSeats() {
                           : "hover:opacity-80"
                       }`}
                       style={{ backgroundColor: gradeColor }}
-                      title={`${seat.rowNum}열 ${seat.seatNum}번`}
+                      title={`${seat.rowNum}열 ${seat.colNum}번`}
                     ></button>
                   );
                 })}

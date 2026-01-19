@@ -6,7 +6,7 @@ export interface Seat {
   id: string;
   seatGrade: Grade;
   rowNum: string;
-  seatNum: string;
+  colNum: string;
   blockNum: string;
 }
 

@@ -4,7 +4,7 @@ import { useReservation } from "../../contexts/ReservationProvider";
 import { gradeInfoColor } from "../../data/seat";
 
 export default function SelectedSeatsList() {
-  const { selectedSeats, handleRemoveSeat, grades } = useReservation();
+  const { selectedSeats, handleRemoveSeat } = useReservation();
 
   if (selectedSeats.size === 0) {
     return (
@@ -31,7 +31,7 @@ export default function SelectedSeatsList() {
                 {seat.seatGrade.name}
               </div>
               <div className="text-xs text-gray-500">
-                {seat.blockNum}구역 {seat.rowNum} {seat.seatNum} 번
+                {seat.blockNum}구역 {seat.rowNum} {seat.colNum} 번
               </div>
             </div>
             <button
