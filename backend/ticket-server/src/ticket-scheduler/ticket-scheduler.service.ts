@@ -47,7 +47,7 @@ export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy() {
     if (this.job) {
-      this.job.stop();
+      void this.job.stop();
       this.logger.log('Stopped setup job');
     }
   }
