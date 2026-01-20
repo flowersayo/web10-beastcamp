@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { MAX_ORDER } from "../route";
 
-export const MAX_ORDER = 100;
 const DECREASE_GAP = 17;
 let currentOrder = MAX_ORDER;
 
@@ -11,7 +11,7 @@ export function GET() {
   currentOrder -= DECREASE_GAP;
 
   const mockWaitingOrder = {
-    order: currentOrder,
+    position: currentOrder,
   };
 
   if (currentOrder <= 0) {
