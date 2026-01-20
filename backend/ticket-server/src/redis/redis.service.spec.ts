@@ -1,89 +1,100 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from './redis.service';
 import { PROVIDERS } from '@beastcamp/shared-constants';
+import { Redis } from 'ioredis';
 
 describe('RedisService', () => {
   let service: RedisService;
-  let mockRedis: Record<string, jest.Mock>;
-
-  const mockRedisClient = {
-    setnx: jest.fn(),
-    set: jest.fn(),
-    get: jest.fn(),
-    del: jest.fn(),
-    flushall: jest.fn(),
-    disconnect: jest.fn(),
-  };
+  let redisClient: jest.Mocked<Partial<Redis>>;
 
   beforeEach(async () => {
+    redisClient = {
+      set: jest.fn(),
+      get: jest.fn(),
+      setnx: jest.fn(),
+      del: jest.fn(),
+      flushall: jest.fn(),
+      incr: jest.fn(),
+      sadd: jest.fn(),
+      sismember: jest.fn(),
+      mget: jest.fn(),
+      disconnect: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RedisService,
         {
           provide: PROVIDERS.REDIS_TICKET,
-          useValue: mockRedisClient,
+          useValue: redisClient,
         },
       ],
     }).compile();
 
     service = module.get<RedisService>(RedisService);
-    mockRedis = module.get(PROVIDERS.REDIS_TICKET);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe('setNx (원자적 좌석 선점) 동작 테스트', () => {
-    const key = 'session1_blockA_1_1';
-    const userId = 'user123';
-
-    describe('키가 존재하지 않는 경우 (첫 번째 예약 시도)', () => {
-      beforeEach(() => {
-        mockRedis.setnx.mockResolvedValue(1);
-      });
-
-      it('Redis에 값을 저장하고 true를 반환해야 한다', async () => {
-        const result = await service.setNx(key, userId);
-        expect(result).toBe(true);
-        expect(mockRedis.setnx).toHaveBeenCalledWith(key, userId);
-      });
+  describe('setNx', () => {
+    it('키가 설정되면 true를 반환해야 한다', async () => {
+      jest.mocked(redisClient.setnx!).mockResolvedValue(1);
+      const result = await service.setNx('key', 'value');
+      expect(result).toBe(true);
     });
 
-    describe('키가 이미 존재하는 경우 (중복 예약 시도)', () => {
-      beforeEach(() => {
-        mockRedis.setnx.mockResolvedValue(0);
-      });
-
-      it('값을 덮어쓰지 않고 false를 반환해야 한다', async () => {
-        const result = await service.setNx(key, userId);
-        expect(result).toBe(false);
-      });
+    it('키가 설정되지 않으면 false를 반환해야 한다', async () => {
+      jest.mocked(redisClient.setnx!).mockResolvedValue(0);
+      const result = await service.setNx('key', 'value');
+      expect(result).toBe(false);
     });
   });
 
-  describe('set 호출 시', () => {
-    it('값을 무조건 저장하고 "OK"를 반환해야 한다', async () => {
-      mockRedis.set.mockResolvedValue('OK');
-      const result = await service.set('key', 'value');
-      expect(result).toBe('OK');
-      expect(mockRedis.set).toHaveBeenCalledWith('key', 'value');
+  describe('incr', () => {
+    it('키 값을 증가시키고 새로운 값을 반환해야 한다', async () => {
+      jest.mocked(redisClient.incr!).mockResolvedValue(2);
+      const result = await service.incr('key');
+      expect(result).toBe(2);
+      expect(jest.mocked(redisClient.incr!)).toHaveBeenCalledWith('key');
     });
   });
 
-  describe('get 호출 시', () => {
-    it('저장된 값을 반환해야 한다', async () => {
-      mockRedis.get.mockResolvedValue('value');
-      const result = await service.get('key');
-      expect(result).toBe('value');
+  describe('sadd', () => {
+    it('멤버들을 set에 추가해야 한다', async () => {
+      jest.mocked(redisClient.sadd!).mockResolvedValue(2);
+      const result = await service.sadd('key', 'm1', 'm2');
+      expect(result).toBe(2);
+      expect(jest.mocked(redisClient.sadd!)).toHaveBeenCalledWith(
+        'key',
+        'm1',
+        'm2',
+      );
     });
   });
 
-  describe('del 호출 시', () => {
-    it('삭제된 키의 개수를 반환해야 한다', async () => {
-      mockRedis.del.mockResolvedValue(1);
-      const result = await service.del('key');
-      expect(result).toBe(1);
+  describe('sismember', () => {
+    it('멤버가 존재하면 true를 반환해야 한다', async () => {
+      jest.mocked(redisClient.sismember!).mockResolvedValue(1);
+      const result = await service.sismember('key', 'member');
+      expect(result).toBe(true);
+    });
+
+    it('멤버가 존재하지 않으면 false를 반환해야 한다', async () => {
+      jest.mocked(redisClient.sismember!).mockResolvedValue(0);
+      const result = await service.sismember('key', 'member');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('mget', () => {
+    it('주어진 키들에 대한 값을 반환해야 한다', async () => {
+      jest.mocked(redisClient.mget!).mockResolvedValue(['v1', null]);
+      const result = await service.mget(['k1', 'k2']);
+      expect(result).toEqual(['v1', null]);
+    });
+
+    it('키가 비어있으면 빈 배열을 반환해야 한다', async () => {
+      const result = await service.mget([]);
+      expect(result).toEqual([]);
+      expect(jest.mocked(redisClient.mget!)).not.toHaveBeenCalled();
     });
   });
 });
