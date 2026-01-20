@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
 import { fetchCaptcha, verifyCaptcha } from '@/services/ticket';
 
 interface CaptchaVerificationProps {
@@ -19,12 +18,15 @@ export function CaptchaVerification({
   const [userInput, setUserInput] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // useSuspenseQuery로 보안 문자 데이터 로드
   // Suspense와 ErrorBoundary가 로딩/에러 상태를 처리
+  // ssr: false로 클라이언트에서만 실행 (Blob URL hydration 에러 방지)
   const { data: captchaData } = useSuspenseQuery({
     queryKey: ['captcha', refreshKey],
     queryFn: fetchCaptcha,
+    staleTime: 0, // 항상 새로운 보안문자 요청
   });
 
   const { captchaId, imageUrl } = captchaData;
@@ -45,6 +47,18 @@ export function CaptchaVerification({
     };
   }, [imageUrl]);
 
+  // 입력값 변경 시 처리 (에러 초기화 안함)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value.toUpperCase());
+  };
+
+  // 포커스 시 에러 메시지 초기화
+  const handleInputFocus = () => {
+    if (error) {
+      setError('');
+    }
+  };
+
   // 검증 처리
   const handleVerify = async () => {
     if (!userInput.trim()) {
@@ -62,20 +76,26 @@ export function CaptchaVerification({
         toast.success('보안 문자 검증 성공');
         onVerified();
       } else {
-        toast.error(result.message);
+        // 에러 표시하고 입력창 리셋 후 포커스
         setError(result.message);
+        setUserInput('');
         onError?.(result.message);
-        // 실패 시 새로운 보안 문자 로드
-        refreshCaptcha();
+        // 포커스 복원
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
       }
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : '보안 문자 검증에 실패했습니다.';
-      toast.error(errorMsg);
+      // 에러 표시하고 입력창 리셋 후 포커스
       setError(errorMsg);
+      setUserInput('');
       onError?.(errorMsg);
-      // 에러 시에도 새로운 보안 문자 로드
-      refreshCaptcha();
+      // 포커스 복원
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     } finally {
       setIsVerifying(false);
     }
@@ -122,24 +142,38 @@ export function CaptchaVerification({
       </button>
 
       {/* 입력 필드 */}
-      <input
-        type="text"
-        value={userInput}
-        onChange={(e) => setUserInput(e.target.value.toUpperCase())}
-        onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
-        placeholder="보안문자 입력"
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4 text-center text-lg tracking-widest"
-        maxLength={6}
-        autoFocus
-        disabled={isVerifying}
-      />
+      <div className="mb-4">
+        <input
+          ref={inputRef}
+          type="text"
+          value={userInput}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+          placeholder="보안문자 입력"
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-center text-lg tracking-widest transition-colors ${
+            error
+              ? 'border-red-300 focus:ring-red-500 bg-red-50'
+              : 'border-gray-200 focus:ring-purple-500'
+          }`}
+          maxLength={6}
+          autoFocus
+          disabled={isVerifying}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'captcha-error' : undefined}
+        />
 
-      {/* 에러 메시지 */}
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-          <p className="text-sm text-red-600 text-center">{error}</p>
-        </div>
-      )}
+        {/* 에러 메시지 - 입력창 바로 아래 caption 형태 */}
+        {error && (
+          <p
+            id="captcha-error"
+            className="mt-2 text-sm text-red-600 text-center"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+      </div>
 
       {/* 확인 버튼 */}
       <button
