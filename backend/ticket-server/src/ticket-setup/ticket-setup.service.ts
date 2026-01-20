@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PerformanceApiService } from '../performance-api/performance-api.service';
+import {
+  PerformanceApiService,
+  SessionResponse,
+} from '../performance-api/performance-api.service';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
@@ -12,7 +15,8 @@ export class TicketSetupService {
   ) {}
 
   async setup(): Promise<void> {
-    // 최신 공연 목록 조회.
+    await this.redisService.flushAll();
+
     const performances = await this.performanceApi.getPerformances(1);
     if (performances.length === 0) {
       throw new Error('No performances found');
@@ -20,32 +24,11 @@ export class TicketSetupService {
     const performanceId = performances[0].performance_id;
     this.logger.log(`Starting setup for performance: ${performanceId}`);
 
-    // 세션 목록 조회.
     const sessions = await this.performanceApi.getSessions(performanceId);
 
-    // 중복 제거된 Venue ID 목록 추출.
-    const venueIds = [...new Set(sessions.map((session) => session.venueId))];
+    const registTasks = sessions.map((session) => this.registToRedis(session));
 
-    // 각 공연장 정보 조회.
-    const venues = await Promise.all(
-      venueIds.map((id) => this.performanceApi.getVenueWithBlocks(id)),
-    );
-
-    // Redis에 저장 테스크.
-    const redisTasks = venues.flatMap((venue) =>
-      venue.blocks.map((block) => {
-        const key = `venue:${venue.id}_block:${block.id}`;
-        const data = JSON.stringify({
-          rowSize: block.rowSize,
-          colSize: block.colSize,
-        });
-        return this.redisService.set(key, data);
-      }),
-    );
-
-    // Redis 저장 실행.
-    await Promise.all(redisTasks);
-
+    await Promise.all(registTasks);
     this.logger.log(`Setup completed for performance: ${performanceId}`);
   }
 
@@ -53,9 +36,9 @@ export class TicketSetupService {
     try {
       await this.redisService.set('is_ticketing_open', 'true');
       this.logger.log('Ticketing opened');
-    } catch (error) {
-      const err = error as Error;
-      this.logger.error(`Failed to open ticketing: ${err.message}`, err.stack);
+    } catch (e) {
+      const err = e as Error;
+      this.logger.error(`Failed to open ticketing: ${err.message}`);
       await this.redisService.set('is_ticketing_open', 'false');
     }
   }
@@ -64,9 +47,32 @@ export class TicketSetupService {
     try {
       await this.redisService.set('is_ticketing_open', 'false');
       this.logger.log('Ticketing closed (tear-down)');
-    } catch (error) {
-      const err = error as Error;
-      this.logger.error(`Tear-down failed: ${err.message}`, err.stack);
+    } catch (e) {
+      const err = e as Error;
+      this.logger.error(`Tear-down failed: ${err.message}`);
     }
+  }
+
+  private async registToRedis(session: SessionResponse): Promise<void> {
+    const venue = await this.performanceApi.getVenueWithBlocks(session.venueId);
+    if (venue.blocks.length === 0) {
+      throw new Error(`No blocks found for venue: ${session.venueId}`);
+    }
+
+    const blockIds = venue.blocks.map((b) => b.id);
+    await this.redisService.sadd(
+      `session:${session.id}:blocks`,
+      ...blockIds.map(String),
+    );
+
+    const blockTasks = venue.blocks.map((block) => {
+      const data = JSON.stringify({
+        rowSize: block.rowSize,
+        colSize: block.colSize,
+      });
+      return this.redisService.set(`block:${block.id}`, data);
+    });
+
+    await Promise.all(blockTasks);
   }
 }
