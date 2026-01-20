@@ -1,5 +1,6 @@
 import { getServerUrl } from '@/constants/api';
-import { api } from './api';
+
+import { api } from '@/lib/api';
 
 export interface CaptchaResponse {
   captchaId: string;
@@ -55,11 +56,11 @@ export async function fetchCaptcha(): Promise<CaptchaResponse> {
  */
 export async function verifyCaptcha(
   captchaId: string,
-  userInput: string
+  userInput: string,
 ): Promise<VerifyCaptchaResponse> {
   return api.post<VerifyCaptchaResponse>(
     '/captcha/verify',
     { captchaId, userInput },
-    { serverType: 'ticket', credentials: 'include' }
+    { serverType: 'ticket', credentials: 'include' },
   );
 }
