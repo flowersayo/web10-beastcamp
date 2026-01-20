@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import useSelection from "@/hooks/useSelector";
 import { RESERVATION_LIMIT } from "../constants/reservationConstants";
-import { CaptchaModal } from "@/components/captcha-modal";
+import { CaptchaModal } from "../components/captcha-modal";
 import { BlockGrade, VenueDetail, Grade } from "@/types/venue";
 import { Performance, Session } from "@/types/performance";
 import { Seat } from "../types/reservationType";

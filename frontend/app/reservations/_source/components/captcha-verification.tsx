@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { fetchCaptcha, verifyCaptcha } from '@/lib/ticket-service';
+
+import { fetchCaptcha, verifyCaptcha } from '@/services/ticket';
 
 interface CaptchaVerificationProps {
   onVerified: () => void;
@@ -13,52 +15,35 @@ export function CaptchaVerification({
   onVerified,
   onError,
 }: CaptchaVerificationProps) {
-  const [captchaId, setCaptchaId] = useState<string>('');
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [userInput, setUserInput] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  // 보안 문자 로드
-  const loadCaptcha = async () => {
-    setIsLoading(true);
-    setError('');
+  // useSuspenseQuery로 보안 문자 데이터 로드
+  // Suspense와 ErrorBoundary가 로딩/에러 상태를 처리
+  const { data: captchaData } = useSuspenseQuery({
+    queryKey: ['captcha', refreshKey],
+    queryFn: fetchCaptcha,
+  });
+
+  const { captchaId, imageUrl } = captchaData;
+
+  // 보안 문자 새로고침
+  const refreshCaptcha = () => {
+    setRefreshKey((prev) => prev + 1);
     setUserInput('');
-
-    try {
-      // 이전 이미지 URL 정리
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
-
-      const data = await fetchCaptcha();
-      setCaptchaId(data.captchaId);
-      setImageUrl(data.imageUrl);
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error
-          ? err.message
-          : '보안 문자를 불러오는데 실패했습니다.';
-      setError(errorMsg);
-      onError?.(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
+    setError('');
   };
 
-  // 컴포넌트 마운트 시 보안 문자 로드
+  // 언마운트 시 URL 정리
   useEffect(() => {
-    loadCaptcha();
-
-    // 언마운트 시 URL 정리
     return () => {
       if (imageUrl) {
         URL.revokeObjectURL(imageUrl);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [imageUrl]);
 
   // 검증 처리
   const handleVerify = async () => {
@@ -81,7 +66,7 @@ export function CaptchaVerification({
         setError(result.message);
         onError?.(result.message);
         // 실패 시 새로운 보안 문자 로드
-        await loadCaptcha();
+        refreshCaptcha();
       }
     } catch (err) {
       const errorMsg =
@@ -90,7 +75,7 @@ export function CaptchaVerification({
       setError(errorMsg);
       onError?.(errorMsg);
       // 에러 시에도 새로운 보안 문자 로드
-      await loadCaptcha();
+      refreshCaptcha();
     } finally {
       setIsVerifying(false);
     }
@@ -122,29 +107,18 @@ export function CaptchaVerification({
 
       {/* 보안 문자 이미지 */}
       <div className="bg-gray-100 rounded-lg p-8 mb-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-24">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : imageUrl ? (
-          <div className="flex justify-center">
-            <img src={imageUrl} alt="보안 문자" className="max-w-full h-auto" />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-24 text-gray-500">
-            보안 문자를 불러올 수 없습니다
-          </div>
-        )}
+        <div className="flex justify-center">
+          <img src={imageUrl} alt="보안 문자" className="max-w-full h-auto" />
+        </div>
       </div>
 
       {/* 새로고침 버튼 */}
       <button
         type="button"
-        onClick={loadCaptcha}
-        disabled={isLoading}
-        className="w-full mb-4 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 transition-colors"
+        onClick={refreshCaptcha}
+        className="w-full mb-4 text-sm text-blue-600 hover:text-blue-800 transition-colors"
       >
-        {isLoading ? '로딩 중...' : '🔄 다른 보안문자 보기'}
+        🔄 다른 보안문자 보기
       </button>
 
       {/* 입력 필드 */}
@@ -157,7 +131,7 @@ export function CaptchaVerification({
         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4 text-center text-lg tracking-widest"
         maxLength={6}
         autoFocus
-        disabled={isVerifying || isLoading}
+        disabled={isVerifying}
       />
 
       {/* 에러 메시지 */}
@@ -170,7 +144,7 @@ export function CaptchaVerification({
       {/* 확인 버튼 */}
       <button
         onClick={handleVerify}
-        disabled={isVerifying || isLoading || !userInput.trim()}
+        disabled={isVerifying || !userInput.trim()}
         className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
       >
         {isVerifying ? '검증 중...' : '확인'}
