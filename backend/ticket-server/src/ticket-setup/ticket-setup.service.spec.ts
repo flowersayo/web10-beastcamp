@@ -30,6 +30,8 @@ describe('TicketSetupService', () => {
           provide: RedisService,
           useValue: {
             set: jest.fn(),
+            sadd: jest.fn(),
+            flushAll: jest.fn(),
           },
         },
       ],
@@ -45,6 +47,7 @@ describe('TicketSetupService', () => {
       performanceApi.getPerformances.mockResolvedValue([]);
 
       await expect(service.setup()).rejects.toThrow('No performances found');
+      expect(jest.mocked(redisService.flushAll)).toHaveBeenCalled();
     });
 
     it('정상적으로 공연 및 좌석 정보를 조회하여 Redis에 저장해야 한다', async () => {
@@ -68,6 +71,7 @@ describe('TicketSetupService', () => {
 
       await service.setup();
 
+      expect(jest.mocked(redisService.flushAll)).toHaveBeenCalled();
       expect(jest.mocked(performanceApi.getPerformances)).toHaveBeenCalledWith(
         1,
       );
@@ -76,7 +80,14 @@ describe('TicketSetupService', () => {
         jest.mocked(performanceApi.getVenueWithBlocks),
       ).toHaveBeenCalledWith(10);
 
-      const expectedKey = 'venue:10_block:100';
+      const expectedSaddKey = 'session:1:blocks';
+      const expectedSaddValue = '100';
+      expect(jest.mocked(redisService.sadd)).toHaveBeenCalledWith(
+        expectedSaddKey,
+        expectedSaddValue,
+      );
+
+      const expectedKey = 'block:100';
       const expectedData = JSON.stringify({ rowSize: 10, colSize: 10 });
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
         expectedKey,
