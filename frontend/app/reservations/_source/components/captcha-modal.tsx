@@ -1,8 +1,17 @@
 'use client';
 
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { ErrorBoundary } from 'react-error-boundary';
-import { CaptchaVerification } from './captcha-verification';
+
+// 동적 import로 클라이언트 전용 로드 (SSR 비활성화)
+const CaptchaVerification = dynamic(
+  () =>
+    import('./captcha-verification').then((mod) => ({
+      default: mod.CaptchaVerification,
+    })),
+  { ssr: false }
+);
 
 interface CaptchaModalProps {
   isOpen: boolean;
