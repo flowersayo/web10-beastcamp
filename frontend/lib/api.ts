@@ -55,7 +55,13 @@ async function request<T = unknown>(
 ): Promise<T> {
   const { params, headers = {}, requireAuth = false, serverType = "api", ...restOptions } = options;
 
-  const baseUrl = getServerUrl(serverType);
+  let baseUrl = getServerUrl(serverType);
+
+  // 서버 사이드에서 상대 경로인 경우 절대 URL로 변환
+  if (typeof window === 'undefined' && baseUrl.startsWith('/')) {
+    baseUrl = `http://localhost:${process.env.PORT || 3000}${baseUrl}`;
+  }
+
   const url = buildUrl(`${baseUrl}${endpoint}`, params);
 
   // 인증이 필요한 경우 토큰 확인 및 추가

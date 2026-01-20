@@ -4,7 +4,7 @@ export type ServerType = 'api' | 'ticket';
 // API 서버 엔드포인트 (Mock 모드 지원)
 export const API_PREFIX =
   process.env.NEXT_PUBLIC_API_MODE === 'mock'
-    ? 'localhost:3000/mock'
+    ? '/api/mock'
     : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
 // 티켓 서버 엔드포인트
