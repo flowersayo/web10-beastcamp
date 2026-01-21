@@ -9,7 +9,7 @@ import { CaptchaModal } from "../components/captcha-modal";
 import { BlockGrade, VenueDetail, Grade } from "@/types/venue";
 import { Performance, Session } from "@/types/performance";
 import { Seat } from "../types/reservationType";
-import { useTimeLogStore } from "@/app/_source/stores/timeLogStore";
+import { useTimeLogStore } from "@/hooks/timeLogStore";
 
 interface ReservationContextValue {
   selectedSeats: ReadonlyMap<string, Seat>;

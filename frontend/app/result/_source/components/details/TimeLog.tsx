@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useTimeLogStore } from "@/app/_source/stores/timeLogStore";
+import { useTimeLogStore } from "@/hooks/timeLogStore";
 import { formatTime } from "@/lib/utils";
 
 export default function TimeLog() {

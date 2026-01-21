@@ -5,7 +5,7 @@ import { useWaitingQueue } from "../hooks/useWaitingQueue";
 import ProgressBar from "./ProgressBar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useTimeLogStore } from "@/app/_source/stores/timeLogStore";
+import { useTimeLogStore } from "@/hooks/timeLogStore";
 
 export default function WaitingProgress() {
   const router = useRouter();
