@@ -5,9 +5,9 @@ import { Redis } from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   constructor(
-    @Inject(PROVIDERS.REDIS_TICKET)
+    @Inject(PROVIDERS.REDIS_TICKET as string)
     private readonly ticketClient: Redis,
-    @Inject(PROVIDERS.REDIS_QUEUE)
+    @Inject(PROVIDERS.REDIS_QUEUE as string)
     private readonly queueClient: Redis,
   ) {}
 

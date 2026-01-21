@@ -25,11 +25,11 @@ describe('RedisService', () => {
       providers: [
         RedisService,
         {
-          provide: PROVIDERS.REDIS_TICKET,
+          provide: PROVIDERS.REDIS_TICKET as string,
           useValue: redisClient,
         },
         {
-          provide: PROVIDERS.REDIS_QUEUE,
+          provide: PROVIDERS.REDIS_QUEUE as string,
           useValue: redisClient,
         },
       ],

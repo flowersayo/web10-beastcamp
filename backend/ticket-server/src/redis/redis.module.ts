@@ -8,12 +8,16 @@ import { RedisService } from './redis.service';
 @Module({
   providers: [
     {
-      provide: PROVIDERS.REDIS_TICKET,
+      provide: PROVIDERS.REDIS_TICKET as string,
       useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>(CONFIG_PATHS.REDIS_TICKET_HOST);
-        const port = configService.get<number>(CONFIG_PATHS.REDIS_TICKET_PORT);
+        const host = configService.get<string>(
+          CONFIG_PATHS.REDIS_TICKET_HOST as string,
+        );
+        const port = configService.get<number>(
+          CONFIG_PATHS.REDIS_TICKET_PORT as string,
+        );
         const password = configService.get<string>(
-          CONFIG_PATHS.REDIS_TICKET_PASSWORD,
+          CONFIG_PATHS.REDIS_TICKET_PASSWORD as string,
         );
 
         return new Redis({
@@ -26,12 +30,16 @@ import { RedisService } from './redis.service';
       inject: [ConfigService],
     },
     {
-      provide: PROVIDERS.REDIS_QUEUE,
+      provide: PROVIDERS.REDIS_QUEUE as string,
       useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>(CONFIG_PATHS.REDIS_QUEUE_HOST);
-        const port = configService.get<number>(CONFIG_PATHS.REDIS_QUEUE_PORT);
+        const host = configService.get<string>(
+          CONFIG_PATHS.REDIS_QUEUE_HOST as string,
+        );
+        const port = configService.get<number>(
+          CONFIG_PATHS.REDIS_QUEUE_PORT as string,
+        );
         const password = configService.get<string>(
-          CONFIG_PATHS.REDIS_QUEUE_PASSWORD,
+          CONFIG_PATHS.REDIS_QUEUE_PASSWORD as string,
         );
 
         return new Redis({
@@ -45,6 +53,10 @@ import { RedisService } from './redis.service';
     },
     RedisService,
   ],
-  exports: [PROVIDERS.REDIS_TICKET, PROVIDERS.REDIS_QUEUE, RedisService],
+  exports: [
+    PROVIDERS.REDIS_TICKET as string,
+    PROVIDERS.REDIS_QUEUE as string,
+    RedisService,
+  ],
 })
 export class RedisModule {}
