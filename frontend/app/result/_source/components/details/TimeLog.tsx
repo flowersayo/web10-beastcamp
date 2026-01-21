@@ -1,10 +1,16 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useTimeLog } from "../../hooks/useTimeLog";
 
 export default function TimeLog() {
-  const { timeLog, totalTime } = useTimeLog();
+  const { timeLog, totalTime } = {
+    timeLog: {
+      queue: 1000,
+      captcha: 1000,
+      seats: 1000,
+    },
+    totalTime: 2000,
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6">
