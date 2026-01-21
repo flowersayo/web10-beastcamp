@@ -9,6 +9,7 @@ import { CaptchaModal } from "../components/captcha-modal";
 import { BlockGrade, VenueDetail, Grade } from "@/types/venue";
 import { Performance, Session } from "@/types/performance";
 import { Seat } from "../types/reservationType";
+import { useTimeLogStore } from "@/app/_source/stores/timeLogStore";
 
 interface ReservationContextValue {
   selectedSeats: ReadonlyMap<string, Seat>;
@@ -24,7 +25,7 @@ interface ReservationContextValue {
   handleSelectArea: (areaId: string) => void;
   handleDeselectArea: () => void;
   blockGrades: BlockGrade[];
-  grades: Grade[]; 
+  grades: Grade[];
 }
 
 const ReservationContext = createContext<ReservationContextValue | null>(null);
@@ -35,7 +36,7 @@ interface ReservationProviderProps {
   performance: Performance;
   sessions: Session[];
   blockGrades: BlockGrade[];
-  grades: Grade[]; 
+  grades: Grade[];
 }
 
 export function ReservationProvider({
@@ -67,6 +68,7 @@ export function ReservationProvider({
   const router = useRouter();
   const [isCaptchaModalOpen, setIsCaptchaModalOpen] = useState(true); // 페이지 진입 시 즉시 모달 표시
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false); // 보안 문자 검증 완료 여부
+  const endSeatSelection = useTimeLogStore((state) => state.endSeatSelection); // 체류 시간 측정
 
   const handleClickReserve = () => {
     // 좌석 선택 확인
@@ -77,6 +79,7 @@ export function ReservationProvider({
 
     // 예매 진행
     try {
+      endSeatSelection();
       router.push("/result");
     } catch (e) {
       console.error(e);

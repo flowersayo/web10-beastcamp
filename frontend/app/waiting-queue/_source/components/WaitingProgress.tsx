@@ -5,18 +5,30 @@ import { useWaitingQueue } from "../hooks/useWaitingQueue";
 import ProgressBar from "./ProgressBar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useTimeLogStore } from "@/app/_source/stores/timeLogStore";
 
 export default function WaitingProgress() {
   const router = useRouter();
   const { data, isFinished } = useWaitingQueue();
+  const startWaitingQueue = useTimeLogStore((state) => state.startWaitingQueue);
+  const endWaitingQueue = useTimeLogStore((state) => state.endWaitingQueue);
+  const resetAllTimers = useTimeLogStore((state) => state.resetAllTimers);
 
   usePreventRefresh();
 
+  // 컴포넌트 초기화 담당: 모든 타이머를 초기화하고 대기열 타이머 시작 설정
+  useEffect(() => {
+    resetAllTimers();
+    startWaitingQueue();
+  }, [resetAllTimers, startWaitingQueue]);
+
+  // isFinished 상태에 따른 대기열 타이머 종료 후 다음 페이지로 이동
   useEffect(() => {
     if (isFinished) {
+      endWaitingQueue();
       router.replace("/reservations");
     }
-  }, [isFinished, router]);
+  }, [isFinished, router, endWaitingQueue]);
 
   const statusText = isFinished ? "입장 중입니다" : `${data?.order ?? 0}번`;
 
