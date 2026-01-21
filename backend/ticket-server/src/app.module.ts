@@ -16,9 +16,12 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [jwtConfig],
+      load: [jwtConfig, redisConfig],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
+    ReservationModule,
+    TicketSchedulerModule,
     CaptchaModule,
   ],
   controllers: [AppController],
@@ -29,14 +32,5 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       useClass: JwtAuthGuard,
     },
   ],
-      load: [redisConfig],
-    }),
-    ScheduleModule.forRoot(),
-    ReservationModule,
-    TicketSchedulerModule,
-    CaptchaModule,
-  ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

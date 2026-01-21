@@ -44,6 +44,7 @@ describe('JWT Auth Guard (e2e)', () => {
 
   describe('GET /test/protected', () => {
     it('should return 401 when no token is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .expect(401)
@@ -54,6 +55,7 @@ describe('JWT Auth Guard (e2e)', () => {
     });
 
     it('should return 401 when invalid token is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Authorization', 'Bearer invalid-token')
@@ -70,6 +72,7 @@ describe('JWT Auth Guard (e2e)', () => {
         type: 'INVALID_TYPE',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Authorization', `Bearer ${invalidToken}`)
@@ -92,6 +95,7 @@ describe('JWT Auth Guard (e2e)', () => {
       // 토큰이 만료될 시간을 주기 위해 약간 대기
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Authorization', `Bearer ${expiredToken}`)
@@ -108,6 +112,7 @@ describe('JWT Auth Guard (e2e)', () => {
         // sub 누락
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Authorization', `Bearer ${invalidToken}`)
@@ -124,6 +129,7 @@ describe('JWT Auth Guard (e2e)', () => {
         type: 'TICKETING',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Authorization', `Bearer ${validToken}`)
@@ -139,6 +145,7 @@ describe('JWT Auth Guard (e2e)', () => {
         type: 'TICKETING',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return request(app.getHttpServer())
         .get('/test/protected')
         .set('Cookie', `activeToken=${validToken}`)
