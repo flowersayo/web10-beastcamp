@@ -1,5 +1,18 @@
+"use client";
+
+import { useResult } from "../../contexts/ResultProvider";
+
 export default function UserRank() {
-  const userRank = 1000;
+  const { rank } = useResult();
+  const userRank = rank ? parseInt(rank, 10) : null;
+
+  if (userRank === null || isNaN(userRank)) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 text-center">
+        <p className="text-gray-600">순위 정보를 불러올 수 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 text-center">
