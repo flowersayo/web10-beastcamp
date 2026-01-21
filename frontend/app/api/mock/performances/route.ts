@@ -1,8 +1,8 @@
 const datas = [
   {
     performance_id: 1,
-    performance_name: "임영웅 콘서트",
-    ticketing_date: "2026-01-30T10:00:00Z",
+    performance_name: "wave to earth - 사랑으로 0.3",
+    ticketing_date: "2026-02-01T18:00:00Z",
   },
 ];
 

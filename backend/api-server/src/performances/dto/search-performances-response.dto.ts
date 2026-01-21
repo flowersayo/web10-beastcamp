@@ -5,7 +5,10 @@ export class PerformanceDto {
   @ApiProperty({ description: '공연 ID', example: 1 })
   performance_id: number;
 
-  @ApiProperty({ description: '공연 이름', example: '임영웅 콘서트' })
+  @ApiProperty({
+    description: '공연 이름',
+    example: 'wave to earth - 사랑으로 0.3',
+  })
   performance_name: string;
 
   @ApiProperty({

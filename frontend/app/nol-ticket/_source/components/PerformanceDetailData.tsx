@@ -1,6 +1,7 @@
-import { getLatestPerformance, getSessions } from "@/services/performance";
-import { getVenue } from "@/services/venue";
-import PerformanceDetail from "./PerformanceDetail";
+import { getLatestPerformance, getSessions } from '@/services/performance';
+import { getVenue } from '@/services/venue';
+
+import PerformanceDetail from './PerformanceDetail';
 
 export default async function PerformanceDetailData() {
   const performance = await getLatestPerformance();

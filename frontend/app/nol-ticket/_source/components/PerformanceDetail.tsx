@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import { Heart, ChevronRight } from "lucide-react";
-import { Performance, Session } from "@/types/performance";
-import DetailDateSelector from "./DetailDateSelector";
-import DetailRoundSelector from "./DetailRoundSelector";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { Heart, ChevronRight } from 'lucide-react';
+import { Performance, Session } from '@/types/performance';
+import DetailDateSelector from './DetailDateSelector';
+import DetailRoundSelector from './DetailRoundSelector';
+import { useRouter } from 'next/navigation';
 
 interface PerformanceDetailProps {
   performance: Performance;
@@ -24,6 +24,44 @@ export default function PerformanceDetail({
   const [likeCount, setLikeCount] = useState(2076);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedRound, setSelectedRound] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  // 카운트다운 계산
+  useEffect(() => {
+    if (!performance?.ticketing_date) return;
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const target = new Date(performance.ticketing_date).getTime();
+      const difference = target - now;
+
+      if (difference <= 0) {
+        setIsActive(true);
+        setTimeLeft(null);
+        return;
+      }
+
+      setIsActive(false);
+
+      const hours = Math.floor(
+        (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [performance?.ticketing_date]);
 
   const handleLike = () => {
     setLiked(!liked);
@@ -32,8 +70,8 @@ export default function PerformanceDetail({
 
   const handleConfirm = () => {
     if (selectedDate && selectedRound) {
-      router.push("/waiting-queue");
-      console.log("예매 확정:", { selectedDate, selectedRound });
+      router.push('/waiting-queue');
+      console.log('예매 확정:', { selectedDate, selectedRound });
     }
   };
 
@@ -45,18 +83,21 @@ export default function PerformanceDetail({
   };
 
   // 날짜 범위 계산
-  let dateRange = "";
+  let dateRange = '';
   if (sessions && sessions.length > 0) {
     const dates = sessions.map((s) => new Date(s.sessionDate).getTime());
     const minDate = new Date(Math.min(...dates));
     const maxDate = new Date(Math.max(...dates));
 
     const formatDate = (d: Date) =>
-      d.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).replace(/\. /g, ".").replace(/\.$/, "");
+      d
+        .toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\. /g, '.')
+        .replace(/\.$/, '');
 
     if (minDate.getTime() === maxDate.getTime()) {
       dateRange = formatDate(minDate);
@@ -67,32 +108,40 @@ export default function PerformanceDetail({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 헤더 네비게이션 */}
-      <nav className="border-b border-gray-200 bg-white sticky top-0 z-10">
+      {/* 헤더 태그 */}
+      <nav className=" bg-white sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button className="px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">
               단독판매
-            </button>
-            <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-              일상예매
-            </button>
-            <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
+              안심예매
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
               예매대기
-            </button>
+            </span>
           </div>
         </div>
       </nav>
 
       {/* 메인 컨텐츠 */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 pb-8">
+        {/* 제목 */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {performance.performance_name}
+          </h1>
+          <p className="text-gray-600">콘서트 주간 2회</p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* 좌측: 포스터 이미지 */}
           <div className="lg:col-span-3">
             <div className="sticky top-24">
               <div className="relative aspect-3/4 rounded-lg overflow-hidden shadow-lg">
                 <Image
-                  src="/images/poster.png"
+                  src="/images/poster.jpg"
                   alt={performance.performance_name}
                   fill
                   className="object-cover"
@@ -107,7 +156,7 @@ export default function PerformanceDetail({
                   className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors"
                 >
                   <Heart
-                    className={`w-5 h-5 ${liked ? "fill-red-500 text-red-500" : ""}`}
+                    className={`w-5 h-5 ${liked ? 'fill-red-500 text-red-500' : ''}`}
                   />
                   <span className="text-sm">티켓캐스트</span>
                   <span className="font-semibold">{likeCount}</span>
@@ -118,21 +167,13 @@ export default function PerformanceDetail({
 
           {/* 중앙: 공연 정보 */}
           <div className="lg:col-span-6 space-y-6">
-            {/* 제목 */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {performance.performance_name}
-              </h1>
-              <p className="text-gray-600">콘서트 주간 2회</p>
-            </div>
-
             {/* 기본 정보 */}
             <div className="space-y-4 pb-6 border-b border-gray-200">
               <div className="flex">
                 <div className="w-24 text-gray-600 font-medium">장소</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 text-gray-900">
-                    <span>{venueName || "올림픽공원 올림픽홀"}</span>
+                    <span>{venueName || '올림픽공원 올림픽홀'}</span>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                   </div>
                 </div>
@@ -243,53 +284,87 @@ export default function PerformanceDetail({
           {/* 우측: 예약 패널 */}
           <div className="lg:col-span-3">
             <div className="sticky top-24">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">관람일</h2>
-
-                <DetailDateSelector
-                  selectedDate={selectedDate}
-                  onDateSelect={onDateSelect}
-                  sessions={sessions}
-                />
-
-                <div className="mt-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">회차</h2>
-                  <DetailRoundSelector
-                    selectedRound={selectedRound}
-                    onRoundSelect={setSelectedRound}
-                    sessions={sessions}
-                    selectedDate={selectedDate}
-                  />
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
+              {!isActive ? (
+                <>
                   <button
                     onClick={handleConfirm}
                     disabled={!selectedDate || !selectedRound}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                       selectedDate && selectedRound
-                        ? "bg-purple-600 text-white hover:bg-purple-700 shadow-lg"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    예매하기
+                    남은시간 {timeLeft?.hours.toString().padStart(2, '0')}:
+                    {timeLeft?.minutes.toString().padStart(2, '0')}:
+                    {timeLeft?.seconds.toString().padStart(2, '0')}
                   </button>
-
                   <button className="w-full mt-3 py-3 rounded-xl bg-white border-2 border-purple-600 text-purple-600 font-bold hover:bg-purple-50 transition-all">
-                    BOOKING / 차량팀
+                    BOOKING / 外國語
                   </button>
-
                   <button className="w-full mt-3 text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1">
                     NOL 카드 쓸 때마다 10% 적립
                     <ChevronRight className="w-4 h-4" />
                   </button>
-
                   <button className="w-full mt-2 text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1">
                     이 공연이 더 궁금하다면
                     <ChevronRight className="w-4 h-4" />
                   </button>
+                </>
+              ) : (
+                /* 티켓팅 시작 후 or 개발 모드 - 날짜/회차 선택 표시 */
+                <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">
+                    관람일
+                  </h2>
+
+                  <DetailDateSelector
+                    selectedDate={selectedDate}
+                    onDateSelect={onDateSelect}
+                    sessions={sessions}
+                  />
+
+                  <div className="mt-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                      회차
+                    </h2>
+                    <DetailRoundSelector
+                      selectedRound={selectedRound}
+                      onRoundSelect={setSelectedRound}
+                      sessions={sessions}
+                      selectedDate={selectedDate}
+                    />
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <button
+                      onClick={handleConfirm}
+                      disabled={!selectedDate || !selectedRound}
+                      className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+                        selectedDate && selectedRound
+                          ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      예매하기
+                    </button>
+
+                    <button className="w-full mt-3 py-3 rounded-xl bg-white border-2 border-purple-600 text-purple-600 font-bold hover:bg-purple-50 transition-all">
+                      BOOKING / 차량팀
+                    </button>
+
+                    <button className="w-full mt-3 text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1">
+                      NOL 카드 쓸 때마다 10% 적립
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button className="w-full mt-2 text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center gap-1">
+                      이 공연이 더 궁금하다면
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
