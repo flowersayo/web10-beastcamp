@@ -4,9 +4,10 @@
 
 -- ARGV[1]: 최대 수용 인원 (MAX_CAPACITY)
 -- ARGV[2]: 현재 타임스탬프 ms (NOW)
--- ARGV[3]: 대기열 이탈 판단 기준 ms (WAITING_INTERVAL)
--- ARGV[4]: 활성 세션 유지 시간 sec (ACTIVE_TTL_SEC)
+-- ARGV[3]: 대기열 이탈 판단 기준 ms (HEARTBEAT_TIMEOUT_MS)
+-- ARGV[4]: 활성 세션 유지 시간 ms (ACTIVE_TTL_MS)
 -- ARGV[5]: 활성 유저 키 접두사 (ACTIVE_USER_PREFIX) -- "queue:active:user:"
+-- ARGV[6]: 하트비트 기능 활성 여부 (IS_HEARTBEAT_ENABLED)
 
 -- [[ KEYS 및 ARGV 매핑 ]]
 local WAITING_QUEUE = KEYS[1]
@@ -15,10 +16,10 @@ local HEARTBEAT_QUEUE = KEYS[3]
 
 local MAX_CAPACITY = tonumber(ARGV[1])
 local NOW = tonumber(ARGV[2])
-local WAITING_INTERVAL = tonumber(ARGV[3])
-local ACTIVE_TTL_SEC = tonumber(ARGV[4])
-local ACTIVE_TTL_MS = ACTIVE_TTL_SEC * 1000
+local HEARTBEAT_TIMEOUT_MS = tonumber(ARGV[3])
+local ACTIVE_TTL_MS = tonumber(ARGV[4])
 local ACTIVE_USER_PREFIX = ARGV[5]
+local IS_HEARTBEAT_ENABLED = ARGV[6]
 
 -- [[ Active Queue 청소 (정원 확보) ]]
 -- 현재 시간보다 score(만료시간)가 작은 유저들을 제거
@@ -26,14 +27,17 @@ redis.call('ZREMRANGEBYSCORE', ACTIVE_QUEUE, '-inf', NOW)
 
 -- [[ Waiting Queue 청소 (이탈자 정리) ]]
 -- (현재 시간 - 허용 간격)보다 이전에 마지막 하트비트를 찍은 유저 제거
-local waiting_deadline = NOW - WAITING_INTERVAL
-local expired_waiters = redis.call('ZRANGEBYSCORE', HEARTBEAT_QUEUE, '-inf', waiting_deadline)
+if IS_HEARTBEAT_ENABLED then
+    local waiting_deadline = NOW - HEARTBEAT_TIMEOUT_MS
+    local expired_waiters = redis.call('ZRANGEBYSCORE', HEARTBEAT_QUEUE, '-inf', waiting_deadline)
 
-for _, user_id in ipairs(expired_waiters) do
-    redis.call('ZREM', WAITING_QUEUE, user_id)
-    redis.call('ZREM', HEARTBEAT_QUEUE, user_id)
+    for _, user_id in ipairs(expired_waiters) do
+        redis.call('ZREM', WAITING_QUEUE, user_id)
+        redis.call('ZREM', HEARTBEAT_QUEUE, user_id)
+    end
 end
 
+-- [[ 유저 승격 로직 ]]
 -- 1. 현재 활성 큐에 몇 명이 있는지 확인 (ZCARD)
 local active_count = redis.call('ZCARD', ACTIVE_QUEUE)
 
@@ -54,7 +58,7 @@ if available > 0 then
         redis.call('ZADD', ACTIVE_QUEUE, NOW + ACTIVE_TTL_MS, user_id)
         
         -- 5-2. 권한 체크용 키 생성
-        redis.call('SET', ACTIVE_USER_PREFIX .. user_id, 'true', 'EX', ACTIVE_TTL_SEC)
+        redis.call('SET', ACTIVE_USER_PREFIX .. user_id, 'true', 'PX', ACTIVE_TTL_MS)
         
         -- 5-3. 대기열 정보 삭제
         redis.call('ZREM', WAITING_QUEUE, user_id)

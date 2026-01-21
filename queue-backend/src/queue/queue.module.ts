@@ -7,6 +7,7 @@ import { QueueTrigger } from './queue.trigger';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { JwtSignOptions } from '@nestjs/jwt';
+import { HeartbeatService } from './heartbeat.service';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import type { JwtSignOptions } from '@nestjs/jwt';
       },
     }),
   ],
-  providers: [QueueService, QueueWorker, QueueTrigger],
+  providers: [QueueService, QueueWorker, QueueTrigger, HeartbeatService],
   controllers: [QueueController],
 })
 export class QueueModule {}
