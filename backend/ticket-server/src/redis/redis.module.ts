@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+
 import { PROVIDERS, CONFIG_PATHS } from '@beastcamp/shared-constants';
 import { Redis } from 'ioredis';
 import { RedisService } from './redis.service';
@@ -8,16 +9,12 @@ import { RedisService } from './redis.service';
 @Module({
   providers: [
     {
-      provide: PROVIDERS.REDIS_TICKET as string,
+      provide: PROVIDERS.REDIS_TICKET,
       useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>(
-          CONFIG_PATHS.REDIS_TICKET_HOST as string,
-        );
-        const port = configService.get<number>(
-          CONFIG_PATHS.REDIS_TICKET_PORT as string,
-        );
+        const host = configService.get<string>(CONFIG_PATHS.REDIS_TICKET_HOST);
+        const port = configService.get<number>(CONFIG_PATHS.REDIS_TICKET_PORT);
         const password = configService.get<string>(
-          CONFIG_PATHS.REDIS_TICKET_PASSWORD as string,
+          CONFIG_PATHS.REDIS_TICKET_PASSWORD,
         );
 
         return new Redis({
@@ -30,16 +27,12 @@ import { RedisService } from './redis.service';
       inject: [ConfigService],
     },
     {
-      provide: PROVIDERS.REDIS_QUEUE as string,
+      provide: PROVIDERS.REDIS_QUEUE,
       useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>(
-          CONFIG_PATHS.REDIS_QUEUE_HOST as string,
-        );
-        const port = configService.get<number>(
-          CONFIG_PATHS.REDIS_QUEUE_PORT as string,
-        );
+        const host = configService.get<string>(CONFIG_PATHS.REDIS_QUEUE_HOST);
+        const port = configService.get<number>(CONFIG_PATHS.REDIS_QUEUE_PORT);
         const password = configService.get<string>(
-          CONFIG_PATHS.REDIS_QUEUE_PASSWORD as string,
+          CONFIG_PATHS.REDIS_QUEUE_PASSWORD,
         );
 
         return new Redis({
@@ -53,10 +46,6 @@ import { RedisService } from './redis.service';
     },
     RedisService,
   ],
-  exports: [
-    PROVIDERS.REDIS_TICKET as string,
-    PROVIDERS.REDIS_QUEUE as string,
-    RedisService,
-  ],
+  exports: [PROVIDERS.REDIS_TICKET, PROVIDERS.REDIS_QUEUE, RedisService],
 })
 export class RedisModule {}

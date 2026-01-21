@@ -1,13 +1,14 @@
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+
 import { PROVIDERS } from '@beastcamp/shared-constants';
 import { Redis } from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   constructor(
-    @Inject(PROVIDERS.REDIS_TICKET as string)
+    @Inject(PROVIDERS.REDIS_TICKET)
     private readonly ticketClient: Redis,
-    @Inject(PROVIDERS.REDIS_QUEUE as string)
+    @Inject(PROVIDERS.REDIS_QUEUE)
     private readonly queueClient: Redis,
   ) {}
 

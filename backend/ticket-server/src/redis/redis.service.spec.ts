@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from './redis.service';
+
 import { PROVIDERS } from '@beastcamp/shared-constants';
 import { Redis } from 'ioredis';
 
@@ -25,11 +26,11 @@ describe('RedisService', () => {
       providers: [
         RedisService,
         {
-          provide: PROVIDERS.REDIS_TICKET as string,
+          provide: PROVIDERS.REDIS_TICKET,
           useValue: redisClient,
         },
         {
-          provide: PROVIDERS.REDIS_QUEUE as string,
+          provide: PROVIDERS.REDIS_QUEUE,
           useValue: redisClient,
         },
       ],
