@@ -101,9 +101,9 @@ export default function Yes24PerformanceDetail({
 
       {/* 메인 컨텐츠 */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 좌측: 포스터 */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
               <div className="relative aspect-[3/4]">
                 <Image
@@ -131,8 +131,8 @@ export default function Yes24PerformanceDetail({
             </div>
           </div>
 
-          {/* 중앙: 상세 정보 */}
-          <div className="lg:col-span-5">
+          {/* 우측: 상세 정보 */}
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
               {/* 기본 정보 테이블 */}
               <div className="space-y-4">
@@ -253,81 +253,99 @@ export default function Yes24PerformanceDetail({
               </div>
             </div>
           </div>
+        </div>
 
-          {/* 우측: 예매 캘린더 */}
-          <div className="lg:col-span-4">
-            <div className="bg-white rounded-lg shadow-sm sticky top-6">
-              <div className="p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">
-                  날짜/시간 선택
-                </h2>
+        {/* 하단: 날짜/시간 선택 */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* 좌측: 날짜/시간 선택 */}
+          <div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-3">
+                날짜/시간 선택
+              </h2>
 
-                <Yes24Calendar
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                  sessions={sessions}
-                />
-
-                {/* 회차 선택 */}
-                {selectedDate && filteredSessions.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-bold text-gray-900 mb-3">
-                      1회 오후 6시 00분
-                    </h3>
-                    <div className="space-y-2">
-                      {filteredSessions.map((session) => {
-                        const sessionDate = new Date(session.sessionDate);
-                        const hours = sessionDate.getHours();
-                        const minutes = sessionDate.getMinutes();
-                        const timeStr = `${hours}:${minutes.toString().padStart(2, '0')}`;
-
-                        return (
-                          <button
-                            key={session.id}
-                            onClick={() => setSelectedSession(session.id.toString())}
-                            className={`w-full p-3 text-left border rounded transition-colors ${
-                              selectedSession === session.id.toString()
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                          >
-                            <div className="text-sm text-gray-900">
-                              {timeStr} 회차
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 예매가능 여부 안내 */}
-                {selectedDate && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded text-xs text-gray-700">
-                    본 공연은 전화예약 서비스를 제공하지 않습니다.
-                  </div>
-                )}
-              </div>
-
-              {/* 하단 버튼 */}
-              <div className="border-t p-4 space-y-2">
-                <button
-                  onClick={handleReservation}
-                  disabled={!selectedDate || !selectedSession}
-                  className={`w-full py-3 rounded font-bold transition-colors ${
-                    selectedDate && selectedSession
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  예매하기
-                </button>
-                <button className="w-full py-3 rounded border-2 border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50 transition-colors">
-                  GLOBAL BOOKING
-                </button>
-              </div>
+              <Yes24Calendar
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+                sessions={sessions}
+              />
             </div>
           </div>
+
+          {/* 우측: 예매 가능 좌석 */}
+          <div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-3">
+                예매 가능 좌석
+              </h2>
+
+              {!selectedDate && (
+                <div className="text-center py-12 text-gray-400">
+                  본 공연은 전화예약 서비스를 제공하지 않습니다.
+                </div>
+              )}
+
+              {selectedDate && filteredSessions.length > 0 && (
+                <div className="space-y-3">
+                  {filteredSessions.map((session) => {
+                    const sessionDate = new Date(session.sessionDate);
+                    const hours = sessionDate.getHours();
+                    const minutes = sessionDate.getMinutes();
+                    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')}`;
+
+                    return (
+                      <button
+                        key={session.id}
+                        onClick={() =>
+                          setSelectedSession(session.id.toString())
+                        }
+                        className={`w-full p-4 text-left border rounded-lg transition-colors ${
+                          selectedSession === session.id.toString()
+                            ? 'border-red-500 bg-red-50'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {timeStr} 회차
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              VIP석 154,000원 / R석 143,000원 / S석 132,000원
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedDate && filteredSessions.length === 0 && (
+                <div className="text-center py-12 text-gray-400">
+                  선택하신 날짜에 예매 가능한 회차가 없습니다.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 하단 버튼 */}
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={handleReservation}
+            disabled={!selectedDate || !selectedSession}
+            className={`px-32 py-4 rounded font-bold text-lg transition-colors ${
+              selectedDate && selectedSession
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            예매하기
+          </button>
+          <button className="px-20 py-4 rounded border-2 border-gray-300 bg-white text-gray-700 font-bold text-lg hover:bg-gray-50 transition-colors">
+            GLOBAL BOOKING
+          </button>
         </div>
       </div>
     </div>
