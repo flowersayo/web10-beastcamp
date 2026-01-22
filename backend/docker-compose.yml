@@ -15,7 +15,7 @@ services:
       context: ..
       dockerfile: backend/api-server/Dockerfile
     ports:
-      - "3001:3001"
+      - "3002:3002"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -27,7 +27,7 @@ services:
       context: ..
       dockerfile: backend/ticket-server/Dockerfile
     ports:
-      - "3002:3002"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
