@@ -48,6 +48,6 @@ COPY --from=deps --chown=nestjs:nodejs /app/packages ./packages
 
 USER nestjs
 
-EXPOSE 3002
+EXPOSE 3001
 
 CMD ["node", "dist/main.js"]
