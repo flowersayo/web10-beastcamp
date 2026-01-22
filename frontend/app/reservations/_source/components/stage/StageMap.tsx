@@ -1,12 +1,22 @@
-import { useEffect, useState } from "react";
-import { useReservation } from "../../contexts/ReservationProvider";
-import AreaSeats from "./AreaSeats";
+import { Suspense, useEffect, useState } from "react";
+import {
+  useReservationData,
+  useReservationState,
+  useReservationDispatch,
+} from "../../contexts/ReservationProvider";
 import { gradeInfoColor } from "../../data/seat";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "react-error-boundary";
+
+const AreaSeats = dynamic(() => import("./AreaSeats"), {
+  ssr: false,
+});
 
 export default function StageMap() {
-  const { venue, handleSelectArea, isShowArea, blockGrades, selectedSeats } =
-    useReservation();
-  console.log(selectedSeats);
+  const { venue, blockGrades } = useReservationData();
+  const { isShowArea } = useReservationState();
+  const { handleSelectArea } = useReservationDispatch();
+
   const blockMapUrl = venue?.blockMapUrl;
 
   const [svgContent, setSvgContent] = useState<string | null>(null);
@@ -24,6 +34,19 @@ export default function StageMap() {
     };
     fetchSvg();
   }, [blockMapUrl]);
+
+  const handleStageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const blockElement = target.closest("[data-block-name]");
+    const blockName = blockElement?.getAttribute("data-block-name");
+
+    if (blockName) {
+      const block = venue?.blocks.find((b) => b.blockDataName === blockName);
+      if (block) {
+        handleSelectArea(String(block.id));
+      }
+    }
+  };
 
   const blockColorMap = (() => {
     if (!venue?.blocks || !blockGrades) return {};
@@ -49,7 +72,7 @@ export default function StageMap() {
       ([name, color]) => `
         [data-block-name="${name}"] { fill: ${color} !important; transition: opacity 0.2s; } 
         [data-block-name="${name}"]:hover { cursor: pointer; }
-      `
+      `,
     )
     .join("\n");
 
@@ -57,7 +80,15 @@ export default function StageMap() {
     <div className="relative h-full w-full bg-[#EDEFF3] rounded-lg overflow-hidden flex items-center justify-center">
       <div className="relative h-full w-full flex items-center justify-center">
         {isShowArea ? (
-          <AreaSeats />
+          <ErrorBoundary
+            fallback={
+              <div>구역 좌석 정보를 불러오는 중 오류가 발생했습니다.</div>
+            }
+          >
+            <Suspense>
+              <AreaSeats />
+            </Suspense>
+          </ErrorBoundary>
         ) : (
           <div className="relative w-127.5 h-108.75">
             <>
@@ -67,21 +98,7 @@ export default function StageMap() {
                 dangerouslySetInnerHTML={{
                   __html: svgContent ? svgContent : "",
                 }}
-                onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  const blockElement = target.closest("[data-block-name]");
-                  const blockName =
-                    blockElement?.getAttribute("data-block-name");
-
-                  if (blockName) {
-                    const block = venue?.blocks.find(
-                      (b) => b.blockDataName === blockName
-                    );
-                    if (block) {
-                      handleSelectArea(String(block.id));
-                    }
-                  }
-                }}
+                onClick={handleStageClick}
               />
             </>
           </div>
