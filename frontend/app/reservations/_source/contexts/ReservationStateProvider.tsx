@@ -28,7 +28,7 @@ interface ReservationDispatchContextValue {
   handleToggleSeat: (seatId: string, seat: Seat) => void;
   handleRemoveSeat: (seatId: string) => void;
   handleResetSeats: () => void;
-  handleClickReserve: (sessionId: number) => void;
+  handleClickReserve: (sessionId: number, token: string) => void;
   handleSelectArea: (areaId: string) => void;
   handleDeselectArea: () => void;
   completeCaptcha: () => void;
@@ -72,7 +72,7 @@ export function ReservationStateProvider({
 
   const { setResult } = useResult();
 
-  const handleClickReserve = async (sessionId: number) => {
+  const handleClickReserve = async (sessionId: number, token: string) => {
     try {
       if (!isCaptchaVerified) {
         alert("보안문자가 입력되지 않았습니다.");
@@ -84,10 +84,14 @@ export function ReservationStateProvider({
         col: +seat.colNum,
       }));
       console.log(seats);
-      const response = await api.post<ReservationResult>("/reservations", {
-        session_id: sessionId,
-        seats,
-      });
+      const response = await api.post<ReservationResult>(
+        "/reservations",
+        {
+          session_id: sessionId,
+          seats,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
       setResult(response);
       router.push("/result");
