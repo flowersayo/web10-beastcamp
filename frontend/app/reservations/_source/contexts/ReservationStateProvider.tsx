@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import useSelection from "@/hooks/useSelector";
 import { RESERVATION_LIMIT } from "../constants/reservationConstants";
 import { Seat } from "../types/reservationType";
+import { useTimeLogStore } from "@/hooks/timeLogStore";
 
 interface ReservationStateContextValue {
   selectedSeats: ReadonlyMap<string, Seat>;
@@ -40,6 +41,8 @@ export function ReservationStateProvider({
     reset: handleResetSeats,
   } = useSelection<string, Seat>(new Map(), { max: RESERVATION_LIMIT });
 
+  const endSeatSelection = useTimeLogStore((state) => state.endSeatSelection); // 체류 시간 측정
+
   const [area, setArea] = useState<string | null>(null);
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
 
@@ -62,7 +65,9 @@ export function ReservationStateProvider({
       // throw new Error("예매 실패");
       if (!isCaptchaVerified) {
         alert("보안문자가 입력되지 않았습니다.");
+        return;
       }
+      endSeatSelection();
       router.push("/result");
     } catch (e) {
       console.error(e);
