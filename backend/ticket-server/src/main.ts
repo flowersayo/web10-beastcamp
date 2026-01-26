@@ -37,7 +37,11 @@ async function bootstrap() {
 
   // CORS 설정
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // 프론트엔드 URL
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://web10-beastcamp.vercel.app',
+    ], // 프론트엔드 URL
     credentials: true,
     exposedHeaders: ['X-Captcha-Id'], // 커스텀 헤더 노출
   });

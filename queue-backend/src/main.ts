@@ -9,7 +9,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://web10-beastcamp.vercel.app',
+    ],
     credentials: true,
   });
 
