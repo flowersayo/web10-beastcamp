@@ -1,4 +1,4 @@
-export type TicketPlatform = 'interpark' | 'yes24' | 'melon-ticket';
+export type TicketPlatform = "nol-ticket" | "yes24" | "melon-ticket";
 
 export interface Performance {
   performance_id: number;
