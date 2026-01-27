@@ -1,6 +1,7 @@
 -- KEYS[1]: 대기 큐 (WAITING_QUEUE)
 -- KEYS[2]: 활성 큐 (ACTIVE_QUEUE)
 -- KEYS[3]: 하트비트 큐 (HEARTBEAT_QUEUE)
+-- KEYS[4]: 가상 유저 작업 큐 (VIRTUAL_ACTIVE_QUEUE)
 
 -- ARGV[1]: 최대 수용 인원 (MAX_CAPACITY)
 -- ARGV[2]: 현재 타임스탬프 ms (NOW)
@@ -13,6 +14,7 @@
 local WAITING_QUEUE = KEYS[1]
 local ACTIVE_QUEUE = KEYS[2]
 local HEARTBEAT_QUEUE = KEYS[3]
+local VIRTUAL_ACTIVE_QUEUE = KEYS[4]
 
 local MAX_CAPACITY = tonumber(ARGV[1])
 local NOW = tonumber(ARGV[2])
@@ -58,11 +60,17 @@ if available > 0 then
         redis.call('ZADD', ACTIVE_QUEUE, NOW + ACTIVE_TTL_MS, user_id)
         
         -- 5-2. 권한 체크용 키 생성
-        redis.call('SET', ACTIVE_USER_PREFIX .. user_id, 'true', 'PX', ACTIVE_TTL_MS)
+        local heartbeat_score = redis.call('ZSCORE', HEARTBEAT_QUEUE, user_id)
+        local user_type = heartbeat_score and 'REAL' or 'VIRTUAL'
+        redis.call('SET', ACTIVE_USER_PREFIX .. user_id, user_type, 'PX', ACTIVE_TTL_MS)
         
         -- 5-3. 대기열 정보 삭제
         redis.call('ZREM', WAITING_QUEUE, user_id)
         redis.call('ZREM', HEARTBEAT_QUEUE, user_id)
+
+        if user_type == 'VIRTUAL' then
+            redis.call('LPUSH', VIRTUAL_ACTIVE_QUEUE, user_id)
+        end
         
         table.insert(moved_ids, user_id)
     end
