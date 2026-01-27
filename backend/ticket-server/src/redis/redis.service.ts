@@ -56,6 +56,10 @@ export class RedisService implements OnModuleDestroy {
     return this.ticketClient.sadd(key, ...members);
   }
 
+  async srandmember(key: string): Promise<string | null> {
+    return this.ticketClient.srandmember(key);
+  }
+
   async incr(key: string): Promise<number> {
     return this.ticketClient.incr(key);
   }
@@ -71,5 +75,12 @@ export class RedisService implements OnModuleDestroy {
 
   async publishToQueue(channel: string, message: string): Promise<number> {
     return this.queueClient.publish(channel, message);
+  }
+
+  async brpopQueueList(
+    key: string,
+    timeoutSeconds: number,
+  ): Promise<[string, string] | null> {
+    return this.queueClient.brpop(key, timeoutSeconds);
   }
 }
