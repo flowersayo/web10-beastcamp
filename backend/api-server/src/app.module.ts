@@ -20,13 +20,13 @@ import { PerformancesModule } from './performances/performances.module';
 
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        if (process.env.NODE_ENV === 'test') {
+        if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev') {
           return {
             type: 'sqlite',
             database: ':memory:',
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize: true,
-            logging: false,
+            logging: process.env.NODE_ENV === 'dev',
           };
         }
         return {
@@ -37,7 +37,7 @@ import { PerformancesModule } from './performances/performances.module';
           password: process.env.DB_PASSWORD || 'test',
           database: process.env.DB_DATABASE || 'ticketing',
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: true,
+          synchronize: false,
           logging: true,
           timezone: 'Z',
         };
