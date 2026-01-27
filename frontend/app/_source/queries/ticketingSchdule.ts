@@ -1,11 +1,11 @@
 import { api } from "@/lib/api/api";
-import { ScheduledTicketingResponse } from "../types/scheduledTicketing";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { ResponsePerformances, Performance } from "@/types/performance";
 
-const getSimulationCacheTime = (data?: ScheduledTicketingResponse[]) => {
+const getSimulationCacheTime = (data?: Performance[]) => {
   if (!data?.[0]) return 0;
 
-  const simulationTime = new Date(data[0].simulation_date).getTime();
+  const simulationTime = new Date(data[0].ticketing_date).getTime();
   const now = new Date().getTime();
   const diff = simulationTime - now;
 
@@ -16,7 +16,7 @@ export const useScheduledTicketingQuery = (
   ticketingAfter: Date | null,
   limit: number | null,
 ) => {
-  return useSuspenseQuery<ScheduledTicketingResponse[]>({
+  return useSuspenseQuery<Performance[]>({
     queryKey: ["performances", ticketingAfter, limit],
     queryFn: async () => {
       const params: Record<string, string | number> = {};
@@ -27,23 +27,17 @@ export const useScheduledTicketingQuery = (
         params.limit = limit;
       }
 
-      const res = await api.get<{ performances: ScheduledTicketingResponse[] }>(
-        "/performances",
-        {
-          serverType: "api",
-          params,
-        },
-      );
+      const res = await api.get<ResponsePerformances>("/performances", {
+        serverType: "api",
+        params,
+      });
 
       if (res.performances.length === 0) {
         throw new Error("공연 정보를 찾을 수 없습니다.");
       }
       return res.performances;
     },
-    staleTime: (query) =>
-      getSimulationCacheTime(
-        query.state.data as ScheduledTicketingResponse[] | undefined,
-      ),
+    staleTime: (query) => getSimulationCacheTime(query.state.data),
     gcTime: 1000 * 60 * 60 * 24, // 24시간
   });
 };

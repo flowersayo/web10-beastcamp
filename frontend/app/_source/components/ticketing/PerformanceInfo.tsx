@@ -1,3 +1,4 @@
+import { PLATFORM_DISPLAY_NAME } from "@/constants/performance";
 import { Performance, Session } from "@/types/performance";
 import { Calendar, MapPin, TrendingUp } from "lucide-react";
 
@@ -35,12 +36,8 @@ export default function PerformanceInfo({
   }
 
   const platformDisplayName = performance.platform
-    ? {
-        "nol-ticket": "NOL티켓",
-        yes24: "YES24",
-        "melon-ticket": "멜론티켓",
-      }[performance.platform]
-    : "nol-ticket";
+    ? PLATFORM_DISPLAY_NAME[performance.platform]
+    : PLATFORM_DISPLAY_NAME["nol-ticket"];
 
   return (
     <div className="grid md:grid-cols-2 gap-8 items-center">
