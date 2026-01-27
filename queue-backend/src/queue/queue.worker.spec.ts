@@ -52,6 +52,7 @@ describe('QueueWorker', () => {
       REDIS_KEYS.WAITING_QUEUE,
       REDIS_KEYS.ACTIVE_QUEUE,
       REDIS_KEYS.HEARTBEAT_QUEUE,
+      REDIS_KEYS.VIRTUAL_ACTIVE_QUEUE,
       10, // maxCapacity
       expect.any(Number), // Date.now()
       60000, // heartbeatTimeoutMs
