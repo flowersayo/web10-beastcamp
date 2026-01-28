@@ -37,7 +37,7 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
     await this.worker.processQueueTransfer();
   }
