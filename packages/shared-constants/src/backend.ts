@@ -20,6 +20,9 @@ export const REDIS_KEYS = {
   CURRENT_TICKETING_SESSION: "ticketing:session:current",
   // 티켓팅 오픈 여부
   TICKETING_OPEN: "is_ticketing_open",
+  // 설정 해시
+  CONFIG_QUEUE: "config:queue",
+  CONFIG_TICKET: "config:ticket",
 };
 
 export const REDIS_KEY_PREFIXES = {
