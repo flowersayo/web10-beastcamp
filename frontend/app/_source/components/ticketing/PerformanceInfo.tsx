@@ -21,17 +21,19 @@ export default function PerformanceInfo({
     const minDate = new Date(Math.min(...dates));
     const maxDate = new Date(Math.max(...dates));
 
-    const formatDate = (d: Date) =>
-      d.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+    const formatDateTime = (d: Date) => {
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
+    };
 
     if (minDate.getTime() === maxDate.getTime()) {
-      dateDisplay = formatDate(minDate);
+      dateDisplay = formatDateTime(minDate);
     } else {
-      dateDisplay = `${formatDate(minDate)} ~ ${formatDate(maxDate)}`;
+      dateDisplay = `${formatDateTime(minDate)} ~ ${formatDateTime(maxDate)}`;
     }
   }
 
