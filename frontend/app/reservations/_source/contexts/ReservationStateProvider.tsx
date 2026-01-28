@@ -102,7 +102,7 @@ export function ReservationStateProvider({
           session_id: sessionId,
           seats,
         },
-        { headers: { Authorization: `Bearer ${token}` } },
+        { serverType: "ticket", headers: { Authorization: `Bearer ${token}` } },
       );
       endSeatSelection();
       setResult(response);
