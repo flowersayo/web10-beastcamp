@@ -1,6 +1,6 @@
-import { PLATFORM_DISPLAY_NAME } from "@/constants/performance";
-import { Performance, Session } from "@/types/performance";
-import { Calendar, MapPin, TrendingUp } from "lucide-react";
+import { PLATFORM_DISPLAY_NAME } from '@/constants/performance';
+import { Performance, Session } from '@/types/performance';
+import { Calendar, MapPin, TrendingUp } from 'lucide-react';
 
 interface PerformanceInfoProps {
   performance: Performance;
@@ -13,31 +13,32 @@ export default function PerformanceInfo({
   sessions,
   venueName,
 }: PerformanceInfoProps) {
-  let dateDisplay = "";
+  let dateDisplay = '';
 
   if (sessions && sessions.length > 0) {
-    console.log("Sessions in PerformanceInfo:", sessions);
+    console.log('Sessions in PerformanceInfo:', sessions);
     const dates = sessions.map((s) => new Date(s.sessionDate).getTime());
     const minDate = new Date(Math.min(...dates));
     const maxDate = new Date(Math.max(...dates));
 
-    const formatDate = (d: Date) =>
-      d.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+    const formatDateTime = (d: Date) => {
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+
+      return `${year}년 ${month}월 ${day}일 `;
+    };
 
     if (minDate.getTime() === maxDate.getTime()) {
-      dateDisplay = formatDate(minDate);
+      dateDisplay = formatDateTime(minDate);
     } else {
-      dateDisplay = `${formatDate(minDate)} ~ ${formatDate(maxDate)}`;
+      dateDisplay = `${formatDateTime(minDate)} ~ ${formatDateTime(maxDate)}`;
     }
   }
 
   const platformDisplayName = performance.platform
     ? PLATFORM_DISPLAY_NAME[performance.platform]
-    : PLATFORM_DISPLAY_NAME["nol-ticket"];
+    : PLATFORM_DISPLAY_NAME['nol-ticket'];
 
   return (
     <div className="grid md:grid-cols-2 gap-8 items-center">
