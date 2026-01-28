@@ -18,6 +18,16 @@ export class Performance {
 
   @Column({
     type: 'varchar',
+    length: 50,
+    name: 'kopis_id',
+    nullable: true,
+    unique: true,
+    comment: 'KOPIS API 공연 ID (mt20id)',
+  })
+  kopisId: string | null;
+
+  @Column({
+    type: 'varchar',
     length: 100,
     name: 'performance_name',
     comment: '공연 이름',
@@ -33,9 +43,18 @@ export class Performance {
 
   @Column({
     type: 'varchar',
+    length: 500,
+    name: 'poster_url',
+    nullable: true,
+    comment: '포스터 이미지 URL',
+  })
+  posterUrl: string | null;
+
+  @Column({
+    type: 'varchar',
     length: 20,
     name: 'platform',
-    comment: '티켓팅 플랫폼 (nol-ticket, yes24, melon-ticket)',
+    comment: '티켓팅 플랫폼 (nol-ticket, yes24, melon-ticket, interpark)',
     default: 'nol-ticket',
   })
   platform: 'nol-ticket' | 'yes24' | 'melon-ticket' | 'interpark';

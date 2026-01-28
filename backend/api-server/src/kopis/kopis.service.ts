@@ -256,6 +256,7 @@ export class KopisService {
 
   /**
    * 공연 상세 정보에서 우선순위에 따라 플랫폼 코드 반환
+   * 주의: filterSupportedPlatforms()를 먼저 호출해야 함 (relatenm이 이미 영문 코드로 변환됨)
    * 우선순위: 인터파크 > 멜론티켓 > 예스24
    */
   getSupportedPlatform(
@@ -263,25 +264,24 @@ export class KopisService {
   ): 'yes24' | 'interpark' | 'melon-ticket' | null {
     if (!detail.relates?.relate) return null;
 
-    const relates = Array.isArray(detail.relates.relate)
-      ? detail.relates.relate
-      : [detail.relates.relate];
+    // filterSupportedPlatforms()에서 이미 단일 객체로 변환했으므로 배열이 아님
+    const relate = detail.relates.relate;
 
-    // 우선순위 순서대로 플랫폼 정의
-    const priorityOrder: Array<'yes24' | 'interpark' | 'melon-ticket'> = [
-      'interpark',
-      'melon-ticket',
-      'yes24',
-    ];
+    // 배열이 아닌 경우에만 처리 (filterSupportedPlatforms에서 단일 객체로 변환됨)
+    if (Array.isArray(relate)) {
+      return null;
+    }
 
-    // 우선순위가 높은 플랫폼부터 확인
-    for (const priorityPlatform of priorityOrder) {
-      for (const relate of relates) {
-        const platform = this.convertPlatform(relate.relatenm);
-        if (platform === priorityPlatform) {
-          return platform;
-        }
-      }
+    // relatenm이 이미 영문 코드로 변환되어 있음
+    const platform = relate.relatenm;
+
+    // 유효한 플랫폼인지 확인
+    if (
+      platform === 'yes24' ||
+      platform === 'interpark' ||
+      platform === 'melon-ticket'
+    ) {
+      return platform;
     }
 
     return null;
@@ -296,15 +296,33 @@ export class KopisService {
     performance.kopisId = detail.mt20id;
     performance.performanceName = detail.prfnm;
     performance.posterUrl = detail.poster;
-    performance.ticketingDate = null; // KOPIS에서 제공하지 않음
 
-    // 플랫폼 추출 (이미 필터링되어 하나만 있음)
+    const ticketingDate = this.parseKopisDate(detail.prfpdfrom);
+    performance.ticketingDate = ticketingDate ?? new Date();
+
     const platform = this.getSupportedPlatform(detail);
-    if (platform) {
-      performance.platform = platform;
-    }
+    performance.platform = platform ?? 'nol-ticket';
 
     return performance;
+  }
+
+  /**
+   * KOPIS 날짜 형식(YYYY.MM.DD)을 Date 객체로 변환
+   */
+  private parseKopisDate(dateStr: string): Date | null {
+    try {
+      const parts = dateStr.split('.');
+      if (parts.length !== 3) return null;
+
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+
+      const date = new Date(year, month, day);
+      return isNaN(date.getTime()) ? null : date;
+    } catch {
+      return null;
+    }
   }
 
   private isKopisApiResponse(obj: unknown): obj is KopisApiResponse {
