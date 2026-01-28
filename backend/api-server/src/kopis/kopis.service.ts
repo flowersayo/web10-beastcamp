@@ -325,6 +325,109 @@ export class KopisService {
     }
   }
 
+  /**
+   * dtguidance 파싱하여 공연 세션 일정 생성
+   * 예: "토요일(18:00), 일요일(15:00)" -> [토요일 18:00, 일요일 15:00]
+   * 예: "목요일(19:00), 토요일 ~ 일요일(19:00)" -> [목요일 19:00, 토요일 19:00, 일요일 19:00]
+   *
+   * @param detail KOPIS 공연 상세 정보
+   * @returns 공연 세션 일정 배열
+   */
+  parseSessionDates(detail: KopisPerformanceDetail): Date[] {
+    const sessions: Date[] = [];
+
+    const startDate = this.parseKopisDate(detail.prfpdfrom);
+    const endDate = this.parseKopisDate(detail.prfpdto);
+
+    if (!startDate || !endDate) {
+      return sessions;
+    }
+
+    const dtguidance = detail.dtguidance || '';
+
+    const dayMap: Record<string, number> = {
+      일: 0,
+      월: 1,
+      화: 2,
+      수: 3,
+      목: 4,
+      금: 5,
+      토: 6,
+    };
+
+    const performanceTimes = new Set<string>();
+
+    // 패턴 1: 요일 범위 - "토요일 ~ 일요일(19:00)"
+    const rangePattern =
+      /(월|화|수|목|금|토|일)요일\s*~\s*(월|화|수|목|금|토|일)요일\((\d{1,2}):(\d{2})\)/g;
+    const rangeMatches = [...dtguidance.matchAll(rangePattern)];
+
+    for (const match of rangeMatches) {
+      const [, startDay, endDay, hour, minute] = match;
+      const startDayNum = dayMap[startDay];
+      const endDayNum = dayMap[endDay];
+
+      if (startDayNum <= endDayNum) {
+        for (let day = startDayNum; day <= endDayNum; day++) {
+          performanceTimes.add(`${day}:${hour}:${minute}`);
+        }
+      } else {
+        // 주를 넘어가는 경우 (예: 토요일 ~ 일요일)
+        for (let day = startDayNum; day <= 6; day++) {
+          performanceTimes.add(`${day}:${hour}:${minute}`);
+        }
+        for (let day = 0; day <= endDayNum; day++) {
+          performanceTimes.add(`${day}:${hour}:${minute}`);
+        }
+      }
+    }
+
+    // 패턴 2: 단일 요일 - "목요일(19:00)"
+    const singlePattern = /(월|화|수|목|금|토|일)요일\((\d{1,2}):(\d{2})\)/g;
+    const singleMatches = [...dtguidance.matchAll(singlePattern)];
+
+    for (const match of singleMatches) {
+      const fullMatch = match[0];
+      if (
+        dtguidance.includes(`~ ${fullMatch}`) ||
+        dtguidance.includes(`~${fullMatch}`)
+      ) {
+        continue;
+      }
+
+      const [, day, hour, minute] = match;
+      const dayNum = dayMap[day];
+      performanceTimes.add(`${dayNum}:${hour}:${minute}`);
+    }
+
+    // 파싱 실패 시 시작일 19:00로 기본 세션 하나 생성
+    if (performanceTimes.size === 0) {
+      const defaultSession = new Date(startDate);
+      defaultSession.setHours(19, 0, 0, 0);
+      sessions.push(defaultSession);
+      return sessions;
+    }
+
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay();
+
+      for (const timeStr of performanceTimes) {
+        const [day, hour, minute] = timeStr.split(':').map(Number);
+        if (day === dayOfWeek) {
+          const sessionDate = new Date(currentDate);
+          sessionDate.setHours(hour, minute, 0, 0);
+          sessions.push(sessionDate);
+        }
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return sessions;
+  }
+
   private isKopisApiResponse(obj: unknown): obj is KopisApiResponse {
     if (typeof obj !== 'object' || obj === null) return false;
     return 'dbs' in obj;
