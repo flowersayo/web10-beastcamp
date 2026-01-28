@@ -106,7 +106,7 @@ describe('TicketSetupService', () => {
     it('티켓팅 상태를 open(true)으로 설정해야 한다', async () => {
       await service.openTicketing();
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'true',
       );
     });
@@ -117,7 +117,7 @@ describe('TicketSetupService', () => {
       await service.openTicketing();
 
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'false',
       );
     });
@@ -127,7 +127,7 @@ describe('TicketSetupService', () => {
     it('티켓팅 상태를 close(false)로 설정해야 한다', async () => {
       await service.tearDown();
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'false',
       );
       expect(jest.mocked(redisService.del)).toHaveBeenCalledWith(

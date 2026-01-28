@@ -18,6 +18,8 @@ export const REDIS_KEYS = {
   VIRTUAL_ACTIVE_QUEUE: "queue:active:virtual",
   // 현재 진행 중인 티켓팅 회차
   CURRENT_TICKETING_SESSION: "ticketing:session:current",
+  // 티켓팅 오픈 여부
+  TICKETING_OPEN: "is_ticketing_open",
 };
 
 export const REDIS_KEY_PREFIXES = {

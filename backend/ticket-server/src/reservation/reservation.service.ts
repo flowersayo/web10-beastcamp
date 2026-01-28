@@ -5,7 +5,7 @@ import {
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
-import { REDIS_CHANNELS } from '@beastcamp/shared-constants';
+import { REDIS_CHANNELS, REDIS_KEYS } from '@beastcamp/shared-constants';
 import { RedisService } from '../redis/redis.service';
 import { CreateReservationRequestDto } from './dto/create-reservation-request.dto';
 import { GetReservationsResponseDto } from './dto/get-reservations-response.dto';
@@ -59,7 +59,9 @@ export class ReservationService {
   }
 
   private async validateTicketingOpen() {
-    const isOpen = await this.redisService.get('is_ticketing_open');
+    const isOpen = await this.redisService.get(
+      String(REDIS_KEYS.TICKETING_OPEN),
+    );
     if (isOpen !== 'true') throw new ForbiddenException('Ticketing not open');
   }
 

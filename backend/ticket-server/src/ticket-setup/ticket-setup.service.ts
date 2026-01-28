@@ -43,18 +43,18 @@ export class TicketSetupService {
 
   async openTicketing(): Promise<void> {
     try {
-      await this.redisService.set('is_ticketing_open', 'true');
+      await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'true');
       this.logger.log('Ticketing opened');
     } catch (e) {
       const err = e as Error;
       this.logger.error(`Failed to open ticketing: ${err.message}`);
-      await this.redisService.set('is_ticketing_open', 'false');
+      await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'false');
     }
   }
 
   async tearDown(): Promise<void> {
     try {
-      await this.redisService.set('is_ticketing_open', 'false');
+      await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'false');
       await this.redisService.del(REDIS_KEYS.CURRENT_TICKETING_SESSION);
       this.logger.log('Ticketing closed (tear-down)');
     } catch (e) {
