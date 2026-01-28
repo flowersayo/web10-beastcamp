@@ -17,6 +17,12 @@ export class VirtualUserInjector {
       return;
     }
 
+    const isEnabled = await this.isVirtualUserEnabled();
+    if (!isEnabled) {
+      this.logger.warn('가상 유저 주입이 비활성화되어 있습니다.');
+      return;
+    }
+
     this.isRunning = true;
     const config = await this.loadConfig();
     const targetTotal = Math.max(0, config.targetTotal);
@@ -52,6 +58,13 @@ export class VirtualUserInjector {
           initialCount,
           Math.floor(targetTotal * progress),
         );
+
+        const enabledNow = await this.isVirtualUserEnabled();
+        if (!enabledNow) {
+          this.logger.warn('가상 유저 주입이 비활성화되어 중단합니다.');
+          this.stopScheduler();
+          return;
+        }
 
         const waitingCount = await this.redis.zcard(REDIS_KEYS.WAITING_QUEUE);
         const missing = targetAtMoment - waitingCount;
@@ -105,6 +118,14 @@ export class VirtualUserInjector {
         ? Math.max(1, burstDurationSec)
         : 30,
     };
+  }
+
+  private async isVirtualUserEnabled(): Promise<boolean> {
+    const raw = await this.redis.get('queue:virtual:enabled');
+    if (raw === null) {
+      return true;
+    }
+    return raw !== '0' && raw.toLowerCase() !== 'false';
   }
 
   private async injectBatch(count: number, now: number): Promise<void> {

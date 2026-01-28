@@ -34,6 +34,12 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
   private async consumeLoop(): Promise<void> {
     while (this.isRunning) {
       try {
+        const enabled = await this.isVirtualUserEnabled();
+        if (!enabled) {
+          await this.delay(500);
+          continue;
+        }
+
         const result = await this.redisService.brpopQueueList(
           REDIS_KEYS.VIRTUAL_ACTIVE_QUEUE,
           this.brpopTimeoutSeconds,
@@ -61,6 +67,12 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private async processVirtualUser(userId: string): Promise<void> {
+    const enabled = await this.isVirtualUserEnabled();
+    if (!enabled) {
+      this.logger.debug('가상 유저 예약 처리 비활성화 상태입니다.');
+      return;
+    }
+
     const sessionId = await this.redisService.get(
       REDIS_KEYS.CURRENT_TICKETING_SESSION,
     );
@@ -131,5 +143,13 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async isVirtualUserEnabled(): Promise<boolean> {
+    const raw = await this.redisService.get('queue:virtual:enabled');
+    if (raw === null) {
+      return true;
+    }
+    return raw !== '0' && raw.toLowerCase() !== 'false';
   }
 }
