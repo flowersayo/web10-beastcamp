@@ -130,11 +130,9 @@ export class QueueService {
   }
 
   private async checkActiveStatus(userId: string) {
-    const activeUserKey = `${REDIS_KEY_PREFIXES.ACTIVE_USER}${userId}`;
-    if (!activeUserKey) {
-      return false;
-    }
-    const exists = await this.redis.exists(activeUserKey);
+    const exists = await this.redis.exists(
+      `${REDIS_KEY_PREFIXES.ACTIVE_USER}${userId}`,
+    );
     return exists > 0;
   }
 
