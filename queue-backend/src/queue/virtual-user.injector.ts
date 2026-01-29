@@ -43,13 +43,9 @@ export class VirtualUserInjector implements OnModuleInit {
         return;
       }
 
-      let config: {
-        targetTotal: number;
-        initialJumpRatio: number;
-        burstDurationSec: number;
-      };
       try {
-        config = await this.loadConfig();
+        const config = await this.loadConfig();
+        this.applyConfig(config);
       } catch (error: unknown) {
         this.isRunning = false;
         const err = error instanceof Error ? error : new Error('Unknown error');
@@ -59,7 +55,6 @@ export class VirtualUserInjector implements OnModuleInit {
         );
         throw err;
       }
-      this.targetTotal = Math.max(0, config.targetTotal);
 
       if (this.targetTotal === 0) {
         this.logger.warn('가상 유저 목표 인원이 0입니다. 주입을 중단합니다.');
@@ -67,11 +62,6 @@ export class VirtualUserInjector implements OnModuleInit {
         return;
       }
 
-      this.initialCount = Math.min(
-        this.targetTotal,
-        Math.floor(this.targetTotal * config.initialJumpRatio),
-      );
-      this.burstMs = Math.max(1000, config.burstDurationSec * 1000);
       this.startAt = Date.now();
       this.injectedCount = 0;
 
@@ -113,6 +103,14 @@ export class VirtualUserInjector implements OnModuleInit {
     if (!this.isRunning) return;
 
     try {
+      try {
+        const config = await this.loadConfig();
+        this.applyConfig(config);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error('Unknown error');
+        this.logger.warn(`가상 유저 설정 갱신 실패: ${err.message}`);
+      }
+
       const now = Date.now();
       const elapsed = now - this.startAt;
       const progress = Math.min(1, elapsed / this.burstMs);
@@ -130,7 +128,7 @@ export class VirtualUserInjector implements OnModuleInit {
 
       const waitingCount = await this.redis.zcard(REDIS_KEYS.WAITING_QUEUE);
       const missing = targetAtMoment - waitingCount;
-      const remainingQuota = this.targetTotal - this.injectedCount;
+      const remainingQuota = Math.max(0, this.targetTotal - this.injectedCount);
       const injectCount = Math.min(missing, remainingQuota);
 
       if (injectCount > 0) {
@@ -179,6 +177,19 @@ export class VirtualUserInjector implements OnModuleInit {
       initialJumpRatio,
       burstDurationSec,
     };
+  }
+
+  private applyConfig(config: {
+    targetTotal: number;
+    initialJumpRatio: number;
+    burstDurationSec: number;
+  }) {
+    this.targetTotal = Math.max(0, config.targetTotal);
+    this.initialCount = Math.min(
+      this.targetTotal,
+      Math.floor(this.targetTotal * config.initialJumpRatio),
+    );
+    this.burstMs = Math.max(1000, config.burstDurationSec * 1000);
   }
 
   private async isVirtualUserEnabled(): Promise<boolean> {
