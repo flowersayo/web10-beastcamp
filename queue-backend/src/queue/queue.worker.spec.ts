@@ -1,21 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueueWorker } from './queue.worker';
 import { PROVIDERS, REDIS_KEYS } from '@beastcamp/shared-constants';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 
 describe('QueueWorker', () => {
   let worker: QueueWorker;
   let redisMock: Record<string, jest.Mock>;
-  const configValues: Record<string, number> = {
-    'queue.maxCapacity': 10,
-    'queue.heartbeatTimeoutMs': 60000,
-    'queue.activeTTLMs': 300000,
-  };
-
   beforeEach(async () => {
     redisMock = {
       syncAndPromoteWaiters: jest.fn(),
+      hget: jest.fn().mockResolvedValue(null),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -24,12 +18,6 @@ describe('QueueWorker', () => {
         {
           provide: PROVIDERS.REDIS_QUEUE,
           useValue: redisMock,
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => configValues[key]),
-          },
         },
       ],
     }).compile();
@@ -52,6 +40,7 @@ describe('QueueWorker', () => {
       REDIS_KEYS.WAITING_QUEUE,
       REDIS_KEYS.ACTIVE_QUEUE,
       REDIS_KEYS.HEARTBEAT_QUEUE,
+      REDIS_KEYS.VIRTUAL_ACTIVE_QUEUE,
       10, // maxCapacity
       expect.any(Number), // Date.now()
       60000, // heartbeatTimeoutMs

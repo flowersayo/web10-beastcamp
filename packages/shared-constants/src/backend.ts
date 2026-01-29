@@ -14,6 +14,15 @@ export const REDIS_KEYS = {
   ACTIVE_QUEUE: "queue:active",
   // 하트비트 큐
   HEARTBEAT_QUEUE: "queue:heartbeat",
+  // 가상 유저 작업 큐
+  VIRTUAL_ACTIVE_QUEUE: "queue:active:virtual",
+  // 현재 진행 중인 티켓팅 회차
+  CURRENT_TICKETING_SESSION: "ticketing:session:current",
+  // 티켓팅 오픈 여부
+  TICKETING_OPEN: "is_ticketing_open",
+  // 설정 해시
+  CONFIG_QUEUE: "config:queue",
+  CONFIG_TICKET: "config:ticket",
 };
 
 export const REDIS_KEY_PREFIXES = {

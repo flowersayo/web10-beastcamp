@@ -2,13 +2,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketSchedulerService } from './ticket-scheduler.service';
 import { TicketSetupService } from '../ticket-setup/ticket-setup.service';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../redis/redis.service';
 
 describe('TicketSchedulerService', () => {
   let service: TicketSchedulerService;
   let setupService: jest.Mocked<TicketSetupService>;
-  let schedulerRegistry: jest.Mocked<SchedulerRegistry>;
+  let redisService: jest.Mocked<RedisService>;
   let module: TestingModule;
 
   beforeEach(async () => {
@@ -24,19 +23,11 @@ describe('TicketSchedulerService', () => {
           },
         },
         {
-          provide: SchedulerRegistry,
+          provide: RedisService,
           useValue: {
-            addCronJob: jest.fn(),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest
-              .fn()
-              .mockImplementation(
-                (_key: string, defaultValue: unknown) => defaultValue,
-              ),
+            hget: jest.fn().mockResolvedValue(null),
+            hset: jest.fn().mockResolvedValue(1),
+            hsetnx: jest.fn().mockResolvedValue(1),
           },
         },
       ],
@@ -44,7 +35,7 @@ describe('TicketSchedulerService', () => {
 
     service = module.get<TicketSchedulerService>(TicketSchedulerService);
     setupService = module.get(TicketSetupService);
-    schedulerRegistry = module.get(SchedulerRegistry);
+    redisService = module.get(RedisService);
   });
 
   afterEach(async () => {
@@ -52,12 +43,12 @@ describe('TicketSchedulerService', () => {
   });
 
   describe('onModuleInit', () => {
-    it('CronJob을 레지스트리에 등록해야 한다', () => {
-      service.onModuleInit();
-      expect(jest.mocked(schedulerRegistry.addCronJob)).toHaveBeenCalledWith(
-        'setupJob',
-        expect.anything(),
-      );
+    it('기본 설정을 Redis에 시드해야 한다', async () => {
+      jest.useFakeTimers();
+      await service.onModuleInit();
+      expect(jest.mocked(redisService.hsetnx)).toHaveBeenCalled();
+      service.onModuleDestroy();
+      jest.useRealTimers();
     });
   });
 

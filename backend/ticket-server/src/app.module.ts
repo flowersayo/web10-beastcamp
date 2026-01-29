@@ -8,6 +8,7 @@ import { TicketSchedulerModule } from './ticket-scheduler/ticket-scheduler.modul
 import { CaptchaModule } from './captcha/captcha.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { VirtualUserModule } from './virtual-user/virtual-user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     ReservationModule,
     TicketSchedulerModule,
     CaptchaModule,
+    VirtualUserModule,
   ],
   controllers: [],
   providers: [

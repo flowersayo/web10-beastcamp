@@ -32,7 +32,25 @@ import { REDIS_COMMANDS } from './redis.commands';
       },
       inject: [ConfigService],
     },
+    {
+      provide: PROVIDERS.REDIS_TICKET,
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get<string>(CONFIG_PATHS.REDIS_TICKET_HOST);
+        const port = configService.get<number>(CONFIG_PATHS.REDIS_TICKET_PORT);
+        const password = configService.get<string>(
+          CONFIG_PATHS.REDIS_TICKET_PASSWORD,
+        );
+
+        return new Redis({
+          host,
+          port,
+          password,
+          retryStrategy: (times) => Math.min(times * 50, 2000),
+        });
+      },
+      inject: [ConfigService],
+    },
   ],
-  exports: [PROVIDERS.REDIS_QUEUE],
+  exports: [PROVIDERS.REDIS_QUEUE, PROVIDERS.REDIS_TICKET],
 })
 export class RedisModule {}
