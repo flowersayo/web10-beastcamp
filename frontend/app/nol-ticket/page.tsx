@@ -6,10 +6,12 @@
 import { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import PerformanceDetailData from './_source/components/PerformanceDetailData';
+import { clearQueueCookies } from '../actions/clearQueueCookie';
 
 export const dynamic = 'force-dynamic';
 
 export default function NolTicketPage() {
+  clearQueueCookies();
   return (
     <>
       <ErrorBoundary
