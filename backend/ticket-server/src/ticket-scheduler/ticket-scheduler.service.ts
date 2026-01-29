@@ -53,7 +53,7 @@ export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
   private scheduleOpen() {
     const cron = this.config.get<string>(
       'TICKETING_OPEN_INTERVAL',
-      '0 5/5 * * * *',
+      '0 0/5 * * * *',
     );
     this.addJob('openJob', cron, () => this.runOpen());
   }
@@ -61,7 +61,7 @@ export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
   private scheduleClose() {
     const cron = this.config.get<string>(
       'TICKETING_CLOSE_INTERVAL',
-      '0 8/5 * * * *',
+      '0 3/5 * * * *',
     );
     this.addJob('closeJob', cron, () => this.runClose());
   }
