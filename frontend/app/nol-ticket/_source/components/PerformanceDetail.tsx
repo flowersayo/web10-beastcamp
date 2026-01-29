@@ -46,7 +46,6 @@ export default function PerformanceDetail({
 
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
-      console.log("현재 시간:", new Date(now).toISOString());
 
       const target = new Date(performance.ticketing_date).getTime();
       const difference = target - now;
@@ -91,7 +90,7 @@ export default function PerformanceDetail({
 
       // URL로도 세션 ID 전달
       router.push(`/waiting-queue?sId=${selectedRound}`);
-      console.log("예매 확정:", { selectedDate, selectedRound, session });
+      // console.log("예매 확정:", { selectedDate, selectedRound, session });
     }
   };
 
