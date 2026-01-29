@@ -51,15 +51,17 @@ export class TicketingStateService implements OnModuleInit, OnModuleDestroy {
    */
   private async refreshIfNeeded(): Promise<void> {
     const now = Date.now();
-    if (now - this.lastSyncAt < this.CACHE_TTL) return;
+    if (now - this.lastSyncAt < this.CACHE_TTL) {
+      return;
+    }
 
     this.lastSyncAt = now;
 
     try {
-      const [isOpen, sessionId] = await Promise.all([
-        this.ticketRedis.get(REDIS_KEYS.TICKETING_OPEN),
-        this.ticketRedis.get(REDIS_KEYS.CURRENT_TICKETING_SESSION),
-      ]);
+      const [isOpen, sessionId] = await this.ticketRedis.mget(
+        REDIS_KEYS.TICKETING_OPEN,
+        REDIS_KEYS.CURRENT_TICKETING_SESSION,
+      );
 
       this.cachedIsOpen = isOpen === 'true';
       this.cachedSessionId = sessionId;
