@@ -29,13 +29,14 @@ describe('TicketSetupService', () => {
         },
         {
           provide: RedisService,
+
           useValue: {
-            set: jest.fn(),
+            set: jest.fn().mockResolvedValue('OK'),
             sadd: jest.fn(),
             del: jest.fn(),
             deleteAllExceptPrefix: jest.fn(),
             deleteAllExceptPrefixQueue: jest.fn(),
-            publishToTicket: jest.fn(),
+            publishToTicket: jest.fn().mockResolvedValue(1),
           },
         },
       ],
