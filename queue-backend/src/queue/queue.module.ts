@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { QueueService } from './queue.service';
+import { QueueConfigService } from './queue-config.service';
 import { QueueController } from './queue.controller';
 import { QueueWorker } from './queue.worker';
 import { QueueTrigger } from './queue.trigger';
@@ -33,6 +34,7 @@ import { VirtualUserInjector } from './virtual-user.injector';
   ],
   providers: [
     QueueService,
+    QueueConfigService,
     QueueWorker,
     QueueTrigger,
     HeartbeatService,
