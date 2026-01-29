@@ -9,6 +9,7 @@ import { RESERVATION_LIMIT } from "../constants/reservationConstants";
 import { Seat } from "../types/reservationType";
 import { useTimeLogStore } from "@/hooks/timeLogStore";
 import { useReservationData } from "./ReservationDataProvider";
+import { useExitPage } from "../hooks/useExitPage";
 
 interface ReservedSeat {
   block_id: number;
@@ -64,6 +65,7 @@ export function ReservationStateProvider({
   const [area, setArea] = useState<string | null>(null);
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const { venue } = useReservationData();
+  useExitPage();
 
   const completeCaptcha = () => {
     setIsCaptchaVerified(true);

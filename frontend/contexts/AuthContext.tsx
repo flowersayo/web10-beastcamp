@@ -4,7 +4,7 @@ import { createContext, useState, useContext, ReactNode } from "react";
 
 interface AuthContextValue {
   token: string | null;
-  setToken: (token: string) => void;
+  setToken: (token: string | null) => void;
 }
 const AuthContext = createContext<AuthContextValue | null>(null);
 
