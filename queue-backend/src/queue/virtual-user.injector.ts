@@ -216,7 +216,12 @@ export class VirtualUserInjector implements OnModuleInit {
       undefined,
       0,
     );
-    await seedQueueBooleanField(this.redis, 'virtual.enabled', undefined, true);
+    await seedQueueBooleanField(
+      this.redis,
+      'virtual.enabled',
+      undefined,
+      false,
+    );
     await seedQueueNumberField(
       this.redis,
       'virtual.tick_interval_ms',
