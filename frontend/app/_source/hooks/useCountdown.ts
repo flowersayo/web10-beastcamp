@@ -34,7 +34,6 @@ function calculateTimeLeft(targetTime: number, now: number): TimeLeft {
 }
 
 export function useCountdown(targetDateStr?: string): UseCountdownReturn {
-  const [offset, setOffset] = useState<number>(0);
   const [status, setStatus] = useState<CountdownStatus>("ended");
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
@@ -47,26 +46,6 @@ export function useCountdown(targetDateStr?: string): UseCountdownReturn {
     refreshPerformance();
   });
 
-  useEffect(() => {
-    if (!targetDateStr) return;
-
-    const syncTime = async () => {
-      try {
-        const startTime = Date.now();
-        const serverTime = await getServerTime();
-        const endTime = Date.now();
-        const latency = (endTime - startTime) / 2;
-        const timeOffset = serverTime + latency - endTime;
-        setOffset(timeOffset);
-      } catch (error) {
-        console.error("Failed to sync time:", error);
-        setOffset(0);
-      }
-    };
-
-    syncTime();
-  }, [targetDateStr]);
-
   // 타이머 동작
   useEffect(() => {
     if (!targetDateStr) return;
@@ -77,7 +56,7 @@ export function useCountdown(targetDateStr?: string): UseCountdownReturn {
     let prevStatus: CountdownStatus | null = null;
 
     const updateTimer = () => {
-      const serverNow = Date.now() + offset;
+      const serverNow = Date.now();
 
       if (serverNow < targetTime) {
         setStatus("waiting");
@@ -102,7 +81,7 @@ export function useCountdown(targetDateStr?: string): UseCountdownReturn {
     const timer = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDateStr, offset]);
+  }, [targetDateStr]);
 
   return { timeLeft, status };
 }
