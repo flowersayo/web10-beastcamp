@@ -22,6 +22,8 @@ describe('QueueTrigger', () => {
 
     redisMock = {
       duplicate: jest.fn().mockReturnValue(subClientMock),
+      hsetnx: jest.fn().mockResolvedValue(1),
+      hget: jest.fn().mockResolvedValue(null),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,9 +37,17 @@ describe('QueueTrigger', () => {
     trigger = module.get<QueueTrigger>(QueueTrigger);
   });
 
-  it('handleCron 실행 시 worker의 이동 로직을 호출해야 한다', async () => {
-    await trigger.handleCron();
+  it('주기 실행 시 worker의 이동 로직을 호출해야 한다', async () => {
+    jest.useFakeTimers();
+
+    await trigger.onModuleInit();
+    await jest.advanceTimersByTimeAsync(60000);
+    await Promise.resolve();
+
     expect(workerMock.processQueueTransfer).toHaveBeenCalled();
+
+    await trigger.onModuleDestroy();
+    jest.useRealTimers();
   });
 
   it('onModuleInit 시 Redis 구독을 설정해야 한다', async () => {

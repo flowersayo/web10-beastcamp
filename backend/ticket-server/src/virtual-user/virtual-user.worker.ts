@@ -6,15 +6,17 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { REDIS_KEYS } from '@beastcamp/shared-constants';
 import { RedisService } from '../redis/redis.service';
 import { ReservationService } from '../reservation/reservation.service';
+import {
+  getTicketNumberField,
+  seedTicketNumberField,
+} from '../config/ticket-config.util';
+import { REDIS_KEYS } from '@beastcamp/shared-constants';
 
 @Injectable()
 export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(VirtualUserWorker.name);
-  private readonly brpopTimeoutSeconds = 2;
-  private readonly maxSeatPickAttempts = 10;
   private isRunning = false;
 
   constructor(
@@ -22,7 +24,32 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
     private readonly reservationService: ReservationService,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
+    await seedTicketNumberField(
+      this.redisService,
+      'virtual.brpop_timeout_sec',
+      undefined,
+      2,
+    );
+    await seedTicketNumberField(
+      this.redisService,
+      'virtual.max_seat_attempts',
+      undefined,
+      10,
+    );
+    await seedTicketNumberField(
+      this.redisService,
+      'virtual.error_delay_ms',
+      undefined,
+      500,
+    );
+    await seedTicketNumberField(
+      this.redisService,
+      'virtual.process_delay_ms',
+      undefined,
+      0,
+    );
+
     this.isRunning = true;
     void this.consumeLoop();
   }
@@ -36,13 +63,15 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
       try {
         const enabled = await this.isVirtualUserEnabled();
         if (!enabled) {
-          await this.delay(500);
+          const config = await this.getVirtualConfig();
+          await this.delay(config.errorDelayMs);
           continue;
         }
 
+        const config = await this.getVirtualConfig();
         const result = await this.redisService.brpopQueueList(
           REDIS_KEYS.VIRTUAL_ACTIVE_QUEUE,
-          this.brpopTimeoutSeconds,
+          config.brpopTimeoutSeconds,
         );
 
         if (!this.isRunning) {
@@ -54,19 +83,26 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
         }
 
         const [, userId] = result;
-        await this.processVirtualUser(userId);
+        await this.processVirtualUser(userId, config.maxSeatPickAttempts);
+        if (config.processDelayMs > 0) {
+          await this.delay(config.processDelayMs);
+        }
       } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error('Unknown error');
         this.logger.error(
           `가상 유저 처리 루프 오류: ${err.message}`,
           err.stack,
         );
-        await this.delay(500);
+        const config = await this.getVirtualConfig();
+        await this.delay(config.errorDelayMs);
       }
     }
   }
 
-  private async processVirtualUser(userId: string): Promise<void> {
+  private async processVirtualUser(
+    userId: string,
+    maxSeatPickAttempts: number,
+  ): Promise<void> {
     const enabled = await this.isVirtualUserEnabled();
     if (!enabled) {
       this.logger.debug('가상 유저 예약 처리 비활성화 상태입니다.');
@@ -104,7 +140,7 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
       colSize: number;
     };
 
-    for (let attempt = 0; attempt < this.maxSeatPickAttempts; attempt++) {
+    for (let attempt = 0; attempt < maxSeatPickAttempts; attempt++) {
       const row = Math.floor(Math.random() * rowSize);
       const col = Math.floor(Math.random() * colSize);
 
@@ -146,10 +182,48 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private async isVirtualUserEnabled(): Promise<boolean> {
-    const raw = await this.redisService.get('queue:virtual:enabled');
+    const raw = await this.redisService.hgetQueue(
+      REDIS_KEYS.CONFIG_QUEUE,
+      'virtual.enabled',
+    );
     if (raw === null) {
       return true;
     }
-    return raw !== '0' && raw.toLowerCase() !== 'false';
+    const lowered = raw.toLowerCase();
+    return lowered !== '0' && lowered !== 'false' && lowered !== 'no';
+  }
+
+  private async getVirtualConfig() {
+    const brpopTimeoutSeconds = await getTicketNumberField(
+      this.redisService,
+      'virtual.brpop_timeout_sec',
+      2,
+      { min: 1 },
+    );
+    const maxSeatPickAttempts = await getTicketNumberField(
+      this.redisService,
+      'virtual.max_seat_attempts',
+      10,
+      { min: 1 },
+    );
+    const errorDelayMs = await getTicketNumberField(
+      this.redisService,
+      'virtual.error_delay_ms',
+      500,
+      { min: 0 },
+    );
+    const processDelayMs = await getTicketNumberField(
+      this.redisService,
+      'virtual.process_delay_ms',
+      0,
+      { min: 0 },
+    );
+
+    return {
+      brpopTimeoutSeconds,
+      maxSeatPickAttempts,
+      errorDelayMs,
+      processDelayMs,
+    };
   }
 }

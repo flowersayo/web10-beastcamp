@@ -90,11 +90,14 @@ export class QueueService {
 
   private async getPosition(userId: string) {
     const rank = await this.redis.zrank(REDIS_KEYS.WAITING_QUEUE, userId);
-    return rank !== null ? rank + 1 : null;
+    if (rank === null) {
+      return null;
+    }
+    return rank + 1;
   }
 
   private async registerUser(userId: string) {
-    const score = Date.now(); // 한국시간 기준
+    const score = Date.now();
     await this.redis
       .multi()
       .zadd(REDIS_KEYS.WAITING_QUEUE, 'NX', score, userId)
@@ -143,9 +146,7 @@ export class QueueService {
   }
 
   private async validateTicketingOpen() {
-    const isOpen = await this.ticketRedis.get(
-      String(REDIS_KEYS.TICKETING_OPEN),
-    );
+    const isOpen = await this.ticketRedis.get(REDIS_KEYS.TICKETING_OPEN);
     if (isOpen !== 'true') {
       throw new ForbiddenException('Ticketing not open');
     }

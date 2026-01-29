@@ -1,11 +1,18 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, OnModuleInit } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import {
   REDIS_KEYS,
   PROVIDERS,
   REDIS_KEY_PREFIXES,
 } from '@beastcamp/shared-constants';
-import { ConfigService } from '@nestjs/config';
+import {
+  getBooleanFromEnv,
+  getNumberFromEnv,
+  getQueueBooleanField,
+  getQueueNumberField,
+  seedQueueBooleanField,
+  seedQueueNumberField,
+} from './queue-config.util';
 
 interface RedisWithCommands extends Redis {
   syncAndPromoteWaiters(
@@ -23,26 +30,39 @@ interface RedisWithCommands extends Redis {
 }
 
 @Injectable()
-export class QueueWorker {
+export class QueueWorker implements OnModuleInit {
   private readonly logger = new Logger(QueueWorker.name);
-  private readonly maxCapacity: number;
-  private readonly heartbeatTimeoutMs: number;
-  private readonly activeTTLMs: number;
-  private readonly heartbeatEnabled: boolean;
   private isActive = false;
 
   constructor(
     @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: RedisWithCommands,
-    private readonly configService: ConfigService,
-  ) {
-    this.maxCapacity =
-      this.configService.get<number>('queue.maxCapacity') || 10;
-    this.heartbeatTimeoutMs =
-      this.configService.get<number>('queue.heartbeatTimeoutMs') || 60000;
-    this.activeTTLMs =
-      this.configService.get<number>('queue.activeTTLMs') || 300000;
-    this.heartbeatEnabled =
-      this.configService.get<boolean>('queue.heartbeatEnabled') ?? true;
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await seedQueueNumberField(
+      this.redis,
+      'worker.max_capacity',
+      getNumberFromEnv('QUEUE_MAX_CAPACITY'),
+      10,
+    );
+    await seedQueueNumberField(
+      this.redis,
+      'worker.heartbeat_timeout_ms',
+      getNumberFromEnv('QUEUE_HEARTBEAT_TIMEOUT_MS'),
+      60000,
+    );
+    await seedQueueNumberField(
+      this.redis,
+      'worker.active_ttl_ms',
+      getNumberFromEnv('QUEUE_ACTIVE_TTL_MS'),
+      300000,
+    );
+    await seedQueueBooleanField(
+      this.redis,
+      'heartbeat.enabled',
+      getBooleanFromEnv('QUEUE_HEARTBEAT_ENABLED'),
+      true,
+    );
   }
 
   async processQueueTransfer() {
@@ -54,17 +74,18 @@ export class QueueWorker {
     this.isActive = true;
 
     try {
+      const config = await this.loadWorkerConfig();
       const movedUsers = await this.redis.syncAndPromoteWaiters(
         REDIS_KEYS.WAITING_QUEUE,
         REDIS_KEYS.ACTIVE_QUEUE,
         REDIS_KEYS.HEARTBEAT_QUEUE,
         REDIS_KEYS.VIRTUAL_ACTIVE_QUEUE,
-        this.maxCapacity,
+        config.maxCapacity,
         Date.now(),
-        this.heartbeatTimeoutMs,
-        this.activeTTLMs,
+        config.heartbeatTimeoutMs,
+        config.activeTTLMs,
         REDIS_KEY_PREFIXES.ACTIVE_USER,
-        this.heartbeatEnabled,
+        config.heartbeatEnabled,
       );
 
       if (movedUsers.length > 0) {
@@ -98,5 +119,33 @@ export class QueueWorker {
     } catch (error) {
       this.logger.error('활성 큐 제거 중 오류 발생:', error);
     }
+  }
+
+  private async loadWorkerConfig() {
+    const maxCapacity = await getQueueNumberField(
+      this.redis,
+      'worker.max_capacity',
+      10,
+      { min: 1 },
+    );
+    const heartbeatTimeoutMs = await getQueueNumberField(
+      this.redis,
+      'worker.heartbeat_timeout_ms',
+      60000,
+      { min: 1000 },
+    );
+    const activeTTLMs = await getQueueNumberField(
+      this.redis,
+      'worker.active_ttl_ms',
+      300000,
+      { min: 1000 },
+    );
+    const heartbeatEnabled = await getQueueBooleanField(
+      this.redis,
+      'heartbeat.enabled',
+      true,
+    );
+
+    return { maxCapacity, heartbeatTimeoutMs, activeTTLMs, heartbeatEnabled };
   }
 }

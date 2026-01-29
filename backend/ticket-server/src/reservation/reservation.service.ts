@@ -59,9 +59,7 @@ export class ReservationService {
   }
 
   private async validateTicketingOpen() {
-    const isOpen = await this.redisService.get(
-      String(REDIS_KEYS.TICKETING_OPEN),
-    );
+    const isOpen = await this.redisService.get(REDIS_KEYS.TICKETING_OPEN);
     if (isOpen !== 'true') throw new ForbiddenException('Ticketing not open');
   }
 

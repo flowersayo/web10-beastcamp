@@ -1,5 +1,4 @@
 import { PROVIDERS } from '@beastcamp/shared-constants';
-import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HeartbeatService } from './heartbeat.service';
 
@@ -7,13 +6,16 @@ describe('HeartbeatService', () => {
   let service: HeartbeatService;
 
   beforeEach(async () => {
-    const redisMock = { zadd: jest.fn() };
-    const configMock = { get: jest.fn().mockReturnValue(undefined) };
+    const redisMock = {
+      zadd: jest.fn(),
+      hget: jest.fn().mockResolvedValue(null),
+      hsetnx: jest.fn().mockResolvedValue(1),
+      hset: jest.fn().mockResolvedValue(1),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HeartbeatService,
-        { provide: ConfigService, useValue: configMock },
         { provide: PROVIDERS.REDIS_QUEUE, useValue: redisMock },
       ],
     }).compile();

@@ -4,52 +4,50 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { ConfigService } from '@nestjs/config';
-import { CronJob } from 'cron';
 import { TicketSetupService } from '../ticket-setup/ticket-setup.service';
+import { RedisService } from '../redis/redis.service';
+import {
+  getNumberFromEnv,
+  getTicketNumberField,
+  seedTicketNumberField,
+} from '../config/ticket-config.util';
 
 @Injectable()
 export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TicketSchedulerService.name);
-  private readonly duration: number;
-  private readonly openDelay: number;
-  private readonly interval: string;
-  private job: CronJob | null = null;
+  private isRunning = false;
 
   constructor(
     private readonly setupService: TicketSetupService,
-    private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly config: ConfigService,
-  ) {
-    this.duration = parseInt(
-      this.config.get('TICKETING_DURATION', '180000'),
-      10,
-    );
-    this.openDelay = parseInt(
-      this.config.get('TICKETING_OPEN_DELAY', '60000'),
-      10,
-    );
-    this.interval = this.config.get('SETUP_INTERVAL', '0 4/5 * * * *');
-  }
+    private readonly redisService: RedisService,
+  ) {}
 
-  onModuleInit() {
-    this.job = new CronJob(this.interval, () => {
-      void this.handleCycle();
-    });
+  async onModuleInit() {
+    await seedTicketNumberField(
+      this.redisService,
+      'schedule.setup_interval_sec',
+      getNumberFromEnv('SETUP_INTERVAL'),
+      300,
+    );
+    await seedTicketNumberField(
+      this.redisService,
+      'schedule.open_delay_ms',
+      getNumberFromEnv('TICKETING_OPEN_DELAY'),
+      60000,
+    );
+    await seedTicketNumberField(
+      this.redisService,
+      'schedule.duration_ms',
+      getNumberFromEnv('TICKETING_DURATION'),
+      180000,
+    );
 
-    // cron 패키지 버전 불일치로 인한 타입 오류를 방지하기 위해 any 캐스팅 사용
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    this.schedulerRegistry.addCronJob('setupJob', this.job as any);
-    this.job.start();
-    this.logger.log(`Scheduled setup job: ${this.interval}`);
+    this.isRunning = true;
+    void this.runLoop();
   }
 
   onModuleDestroy() {
-    if (this.job) {
-      void this.job.stop();
-      this.logger.log('Stopped setup job');
-    }
+    this.isRunning = false;
   }
 
   async handleCycle() {
@@ -58,10 +56,23 @@ export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
 
       await this.setupService.setup();
 
-      await this.delay(this.openDelay);
+      const openDelay = await getTicketNumberField(
+        this.redisService,
+        'schedule.open_delay_ms',
+        60000,
+        { min: 0 },
+      );
+      const duration = await getTicketNumberField(
+        this.redisService,
+        'schedule.duration_ms',
+        180000,
+        { min: 0 },
+      );
+
+      await this.delay(openDelay);
       await this.setupService.openTicketing();
 
-      await this.delay(this.duration);
+      await this.delay(duration);
 
       this.logger.log('Ticketing cycle completed successfully.');
     } catch (e) {
@@ -69,6 +80,22 @@ export class TicketSchedulerService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Ticketing cycle failed: ${err.message}`, err.stack);
     } finally {
       await this.setupService.tearDown();
+    }
+  }
+
+  private async runLoop(): Promise<void> {
+    while (this.isRunning) {
+      const intervalSec = await getTicketNumberField(
+        this.redisService,
+        'schedule.setup_interval_sec',
+        300,
+        { min: 1 },
+      );
+      await this.delay(intervalSec * 1000);
+      if (!this.isRunning) {
+        break;
+      }
+      await this.handleCycle();
     }
   }
 

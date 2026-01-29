@@ -16,7 +16,8 @@ export class TicketSetupService {
   ) {}
 
   async setup(): Promise<void> {
-    await this.redisService.flushAll();
+    await this.redisService.deleteAllExceptPrefix('config:');
+    await this.redisService.deleteAllExceptPrefixQueue('config:');
 
     const performances = await this.performanceApi.getPerformances(1);
     if (performances.length === 0) {
