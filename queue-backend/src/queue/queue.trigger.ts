@@ -28,7 +28,7 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
       this.redis,
       'schedule.transfer_interval_sec',
       undefined,
-      60,
+      5,
     );
     this.subClient = this.redis.duplicate();
     await this.subClient.subscribe(REDIS_CHANNELS.QUEUE_EVENT_DONE);
@@ -54,7 +54,7 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     const intervalSec = await getQueueNumberField(
       this.redis,
       'schedule.transfer_interval_sec',
-      60,
+      5,
       { min: 1 },
     );
     const delayMs = intervalSec * 1000;

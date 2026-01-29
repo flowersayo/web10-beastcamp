@@ -182,7 +182,7 @@ export class VirtualUserInjector implements OnModuleInit {
   }
 
   private async isVirtualUserEnabled(): Promise<boolean> {
-    return getQueueBooleanField(this.redis, 'virtual.enabled', true);
+    return getQueueBooleanField(this.redis, 'virtual.enabled', false);
   }
 
   private async seedVirtualConfig(): Promise<void> {
