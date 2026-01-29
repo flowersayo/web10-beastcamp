@@ -8,6 +8,7 @@ import {
   VenueResponse,
 } from '../performance-api/performance-api.service';
 import { RedisService } from '../redis/redis.service';
+import { REDIS_KEYS } from '@beastcamp/shared-constants';
 
 describe('TicketSetupService', () => {
   let service: TicketSetupService;
@@ -31,7 +32,9 @@ describe('TicketSetupService', () => {
           useValue: {
             set: jest.fn(),
             sadd: jest.fn(),
-            flushAll: jest.fn(),
+            del: jest.fn(),
+            deleteAllExceptPrefix: jest.fn(),
+            deleteAllExceptPrefixQueue: jest.fn(),
           },
         },
       ],
@@ -47,7 +50,12 @@ describe('TicketSetupService', () => {
       performanceApi.getPerformances.mockResolvedValue([]);
 
       await expect(service.setup()).rejects.toThrow('No performances found');
-      expect(jest.mocked(redisService.flushAll)).toHaveBeenCalled();
+      expect(
+        jest.mocked(redisService.deleteAllExceptPrefix),
+      ).toHaveBeenCalledWith('config:');
+      expect(
+        jest.mocked(redisService.deleteAllExceptPrefixQueue),
+      ).toHaveBeenCalledWith('config:');
     });
 
     it('정상적으로 공연 및 좌석 정보를 조회하여 Redis에 저장해야 한다', async () => {
@@ -71,7 +79,12 @@ describe('TicketSetupService', () => {
 
       await service.setup();
 
-      expect(jest.mocked(redisService.flushAll)).toHaveBeenCalled();
+      expect(
+        jest.mocked(redisService.deleteAllExceptPrefix),
+      ).toHaveBeenCalledWith('config:');
+      expect(
+        jest.mocked(redisService.deleteAllExceptPrefixQueue),
+      ).toHaveBeenCalledWith('config:');
       expect(jest.mocked(performanceApi.getPerformances)).toHaveBeenCalledWith(
         1,
       );
@@ -90,6 +103,10 @@ describe('TicketSetupService', () => {
       const expectedKey = 'block:100';
       const expectedData = JSON.stringify({ rowSize: 10, colSize: 10 });
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
+        REDIS_KEYS.CURRENT_TICKETING_SESSION,
+        '1',
+      );
+      expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
         expectedKey,
         expectedData,
       );
@@ -100,7 +117,7 @@ describe('TicketSetupService', () => {
     it('티켓팅 상태를 open(true)으로 설정해야 한다', async () => {
       await service.openTicketing();
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'true',
       );
     });
@@ -111,7 +128,7 @@ describe('TicketSetupService', () => {
       await service.openTicketing();
 
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'false',
       );
     });
@@ -121,8 +138,11 @@ describe('TicketSetupService', () => {
     it('티켓팅 상태를 close(false)로 설정해야 한다', async () => {
       await service.tearDown();
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(
-        'is_ticketing_open',
+        REDIS_KEYS.TICKETING_OPEN,
         'false',
+      );
+      expect(jest.mocked(redisService.del)).toHaveBeenCalledWith(
+        REDIS_KEYS.CURRENT_TICKETING_SESSION,
       );
     });
   });

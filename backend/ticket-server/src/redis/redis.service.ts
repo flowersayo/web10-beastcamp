@@ -43,6 +43,26 @@ export class RedisService implements OnModuleDestroy {
     return this.ticketClient.get(key);
   }
 
+  async hget(key: string, field: string): Promise<string | null> {
+    return this.ticketClient.hget(key, field);
+  }
+
+  async hset(key: string, field: string, value: string): Promise<number> {
+    return this.ticketClient.hset(key, field, value);
+  }
+
+  async hsetnx(key: string, field: string, value: string): Promise<number> {
+    return this.ticketClient.hsetnx(key, field, value);
+  }
+
+  async getQueue(key: string): Promise<string | null> {
+    return this.queueClient.get(key);
+  }
+
+  async hgetQueue(key: string, field: string): Promise<string | null> {
+    return this.queueClient.hget(key, field);
+  }
+
   async mget(keys: string[]): Promise<(string | null)[]> {
     if (keys.length === 0) return [];
     return this.ticketClient.mget(...keys);
@@ -54,6 +74,10 @@ export class RedisService implements OnModuleDestroy {
 
   async sadd(key: string, ...members: string[]): Promise<number> {
     return this.ticketClient.sadd(key, ...members);
+  }
+
+  async srandmember(key: string): Promise<string | null> {
+    return this.ticketClient.srandmember(key);
   }
 
   async incr(key: string): Promise<number> {
@@ -69,7 +93,55 @@ export class RedisService implements OnModuleDestroy {
     return this.ticketClient.flushall();
   }
 
+  async flushAllQueue(): Promise<string> {
+    return this.queueClient.flushall();
+  }
+
+  async deleteAllExceptPrefix(prefix: string): Promise<number> {
+    return this.deleteAllExceptPrefixWithClient(this.ticketClient, prefix);
+  }
+
+  async deleteAllExceptPrefixQueue(prefix: string): Promise<number> {
+    return this.deleteAllExceptPrefixWithClient(this.queueClient, prefix);
+  }
+
   async publishToQueue(channel: string, message: string): Promise<number> {
     return this.queueClient.publish(channel, message);
+  }
+
+  async brpopQueueList(
+    key: string,
+    timeoutSeconds: number,
+  ): Promise<[string, string] | null> {
+    return this.queueClient.brpop(key, timeoutSeconds);
+  }
+
+  async existsInQueue(key: string): Promise<boolean> {
+    const result = await this.queueClient.exists(key);
+    return result > 0;
+  }
+
+  private async deleteAllExceptPrefixWithClient(
+    client: Redis,
+    prefix: string,
+  ): Promise<number> {
+    let totalDeleted = 0;
+
+    const stream = client.scanStream({
+      match: `*`,
+      count: 1000,
+    });
+
+    for await (const rawKeys of stream) {
+      const keys = rawKeys as string[];
+      const targets = keys.filter((key: string) => !key.startsWith(prefix));
+
+      if (targets.length > 0) {
+        const deletedCount = await client.unlink(...targets);
+        totalDeleted += deletedCount;
+      }
+    }
+
+    return totalDeleted;
   }
 }

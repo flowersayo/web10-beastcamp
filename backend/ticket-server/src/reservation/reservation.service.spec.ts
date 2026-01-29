@@ -6,6 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { ReservationService } from './reservation.service';
+import { REDIS_KEYS } from '@beastcamp/shared-constants';
 import { RedisService } from '../redis/redis.service';
 
 describe('ReservationService', () => {
@@ -111,7 +112,7 @@ describe('ReservationService', () => {
       const mockBlockData = JSON.stringify({ rowSize: 2, colSize: 2 });
       redisService.setNxWithTtl.mockResolvedValue(true);
       redisService.get.mockImplementation((key) => {
-        if (key === 'is_ticketing_open') return Promise.resolve('true');
+        if (key === REDIS_KEYS.TICKETING_OPEN) return Promise.resolve('true');
         if (key === 'block:10') return Promise.resolve(mockBlockData);
         return Promise.resolve(null);
       });
@@ -130,7 +131,7 @@ describe('ReservationService', () => {
       const mockBlockData = JSON.stringify({ rowSize: 5, colSize: 5 });
       redisService.setNxWithTtl.mockResolvedValue(true);
       redisService.get.mockImplementation((key) => {
-        if (key === 'is_ticketing_open') return Promise.resolve('true');
+        if (key === REDIS_KEYS.TICKETING_OPEN) return Promise.resolve('true');
         if (key === 'block:10') return Promise.resolve(mockBlockData);
         return Promise.resolve(null);
       });
@@ -152,12 +153,12 @@ describe('ReservationService', () => {
       const mockBlockData = JSON.stringify({ rowSize: 2, colSize: 2 });
       redisService.setNxWithTtl.mockResolvedValue(true);
       redisService.get.mockImplementation((key) => {
-        if (key === 'is_ticketing_open') return Promise.resolve('true');
+        if (key === REDIS_KEYS.TICKETING_OPEN) return Promise.resolve('true');
         if (key === 'block:10') return Promise.resolve(mockBlockData);
         return Promise.resolve(null);
       });
       redisService.sismember.mockResolvedValue(true);
-      redisService.msetnx.mockResolvedValue(0);
+      redisService.msetnx.mockResolvedValue(false);
 
       await expect(service.reserve(dto, userId)).rejects.toThrow(
         BadRequestException,
@@ -168,14 +169,14 @@ describe('ReservationService', () => {
       const mockBlockData = JSON.stringify({ rowSize: 2, colSize: 2 });
       redisService.setNxWithTtl.mockResolvedValue(true);
       redisService.get.mockImplementation((key) => {
-        if (key === 'is_ticketing_open') return Promise.resolve('true');
+        if (key === REDIS_KEYS.TICKETING_OPEN) return Promise.resolve('true');
         if (key === 'block:10') return Promise.resolve(mockBlockData);
         return Promise.resolve(null);
       });
       redisService.sismember.mockResolvedValue(true);
-      redisService.msetnx.mockResolvedValue(1);
+      redisService.msetnx.mockResolvedValue(true);
       redisService.incr.mockResolvedValue(5);
-      redisService.publishToQueue.mockResolvedValue(undefined);
+      redisService.publishToQueue.mockResolvedValue(1);
 
       const result = await service.reserve(dto, userId);
 
@@ -188,7 +189,7 @@ describe('ReservationService', () => {
     it('여러 블록의 좌석을 동시에 예약할 수 있어야 한다', async () => {
       redisService.setNxWithTtl.mockResolvedValue(true);
       redisService.get.mockImplementation((key) => {
-        if (key === 'is_ticketing_open') return Promise.resolve('true');
+        if (key === REDIS_KEYS.TICKETING_OPEN) return Promise.resolve('true');
         if (key === 'block:10')
           return Promise.resolve(JSON.stringify({ rowSize: 5, colSize: 5 }));
         if (key === 'block:11')
@@ -196,7 +197,7 @@ describe('ReservationService', () => {
         return Promise.resolve(null);
       });
       redisService.sismember.mockResolvedValue(true);
-      redisService.msetnx.mockResolvedValue(1);
+      redisService.msetnx.mockResolvedValue(true);
       redisService.incr.mockResolvedValue(10);
 
       const multiBlockDto = {

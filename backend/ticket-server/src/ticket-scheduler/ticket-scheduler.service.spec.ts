@@ -8,8 +8,13 @@ import { ConfigService } from '@nestjs/config';
 describe('TicketSchedulerService', () => {
   let service: TicketSchedulerService;
   let setupService: jest.Mocked<TicketSetupService>;
-  let schedulerRegistry: jest.Mocked<SchedulerRegistry>;
-  let module: TestingModule;
+  let module: TestingModule | undefined;
+  const schedulerRegistryMock = {
+    addCronJob: jest.fn(),
+  };
+  const configServiceMock = {
+    get: jest.fn((key: string, defaultValue?: string) => defaultValue),
+  };
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -25,39 +30,30 @@ describe('TicketSchedulerService', () => {
         },
         {
           provide: SchedulerRegistry,
-          useValue: {
-            addCronJob: jest.fn(),
-          },
+          useValue: schedulerRegistryMock,
         },
         {
           provide: ConfigService,
-          useValue: {
-            get: jest
-              .fn()
-              .mockImplementation(
-                (_key: string, defaultValue: unknown) => defaultValue,
-              ),
-          },
+          useValue: configServiceMock,
         },
       ],
     }).compile();
 
     service = module.get<TicketSchedulerService>(TicketSchedulerService);
     setupService = module.get(TicketSetupService);
-    schedulerRegistry = module.get(SchedulerRegistry);
   });
 
   afterEach(async () => {
-    await module.close();
+    if (module) {
+      await module.close();
+    }
   });
 
   describe('onModuleInit', () => {
-    it('CronJob을 레지스트리에 등록해야 한다', () => {
+    it('크론 잡을 시작해야 한다', () => {
       service.onModuleInit();
-      expect(jest.mocked(schedulerRegistry.addCronJob)).toHaveBeenCalledWith(
-        'setupJob',
-        expect.anything(),
-      );
+      expect((service as unknown as { job: unknown }).job).not.toBeNull();
+      service.onModuleDestroy();
     });
   });
 
