@@ -7,7 +7,7 @@ import { ResultProvider } from '../contexts/ResultContext';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Header from './_source/components/Header';
-import Script from 'next/script';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,22 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <head>
-        {' '}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-MJVW856FVF"
-          strategy="afterInteractive"
-        />
-        <Script id="ga-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-P3R20BSSJL');
-          `}
-        </Script>
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -60,6 +44,7 @@ export default function RootLayout({
         </QueryProvider>
         <Toaster />
       </body>
+      <GoogleAnalytics gaId="G-MJVW856FVF" />
     </html>
   );
 }
