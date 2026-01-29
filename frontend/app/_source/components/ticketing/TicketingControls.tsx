@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useCountdown } from "../../hooks/useCountdown";
 import CountdownTimer from "./CountdownTimer";
 import type { Performance, Session } from "@/types/performance";
@@ -16,6 +17,9 @@ export default function TicketingControls({
   performance,
 }: TicketingControlsProps) {
   const router = useRouter();
+  const { token } = useAuth();
+
+  console.log(token);
 
   const { timeLeft, status } = useCountdown(performance?.ticketing_date);
 
