@@ -120,7 +120,16 @@ export class QueueService {
 
       if (acquired === 'OK') {
         this.logger.log(`🚀 [세션 ${sessionId}] 가상 유저 주입 프로세스 시작`);
-        await this.virtualUserInjector.start();
+        try {
+          await this.virtualUserInjector.start();
+        } catch (error) {
+          await this.redis.del(lockKey);
+          this.logger.error(
+            '가상 유저 시작 체크 중 오류:',
+            (error as Error).stack,
+          );
+          return;
+        }
       }
 
       this.lastTriggeredSessionId = sessionId;
