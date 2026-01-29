@@ -12,6 +12,8 @@ export class DynamicConfigManager {
 
   private lastFetchTime = 0;
   private isInitialized = false;
+  private isLastRefreshFailed = false; // 실패 여부 기록
+  private readonly BACKOFF_TTL = 1000; // 실패 시 재시도 간격 (1초)
 
   constructor(redis: Redis, key: string, options: { ttl?: number } = {}) {
     this.redis = redis;
@@ -25,21 +27,27 @@ export class DynamicConfigManager {
    */
   async refresh(force = false): Promise<void> {
     const now = Date.now();
-    if (!force && this.isInitialized && now - this.lastFetchTime < this.ttl) {
+
+    const currentTtl = this.isLastRefreshFailed ? this.BACKOFF_TTL : this.ttl;
+
+    if (!force && this.isInitialized && now - this.lastFetchTime < currentTtl) {
       return;
     }
 
     try {
       const result = await this.redis.hgetall(this.key);
       this.cache = result || {};
-      this.lastFetchTime = now;
       this.isInitialized = true;
+      this.isLastRefreshFailed = false;
     } catch (error) {
+      this.isLastRefreshFailed = true;
       this.logger.warn(
         `[${this.key}] Refresh가 실패했습니다. ${this.isInitialized ? "오래된 캐시를 사용합니다." : "초기 데이터가 없습니다."} Error: ${
           error instanceof Error ? error.message : "Unknown"
         }`,
       );
+    } finally {
+      this.lastFetchTime = now;
     }
   }
 
