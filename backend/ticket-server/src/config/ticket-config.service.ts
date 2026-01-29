@@ -36,7 +36,7 @@ export class TicketConfigService implements OnModuleInit {
   }
 
   isVirtualUserEnabled(): boolean {
-    return this.queueManager.getBoolean('virtual.enabled', true);
+    return this.queueManager.getBoolean('virtual.enabled', false);
   }
 
   getVirtualConfig(): {
