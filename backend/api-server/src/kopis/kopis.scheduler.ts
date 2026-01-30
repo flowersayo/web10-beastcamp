@@ -20,7 +20,8 @@ export class KopisScheduler {
     private readonly dataSource: DataSource,
   ) {}
 
-  @Cron('30 23 * * *', { name: 'kopis-sync', timeZone: 'Asia/Seoul' })
+  // UTC 14:30 (KST 23:30)
+  @Cron('30 14 * * *', { name: 'kopis-sync' })
   async handleCron() {
     this.logger.log('Starting KOPIS data sync...');
     await this.syncPerformances();
@@ -69,7 +70,7 @@ export class KopisScheduler {
       const validDetails = details.filter((detail) => detail !== null);
 
       if (validDetails.length === 0) {
-        this.logger.log(`No valid performances found from KOPIS `);
+        this.logger.log('No valid performances found from KOPIS');
         return;
       }
 
@@ -95,17 +96,29 @@ export class KopisScheduler {
           throw new Error(message);
         }
       } else {
-        // 기본값: 23:30 실행 기준 다음날 00:05 ~ 다음날 24:00
-        const now = new Date();
-        startTime = new Date(now);
-        startTime.setDate(startTime.getDate() + 1); // 다음날
-        startTime.setHours(0, 5, 0, 0);
+        // 기본값: 실행 기준(UTC 14:30 = KST 23:30) 다음날 KST 00:05 ~ 24:00
+        const curr = new Date();
+        // 1. 현재(UTC) 시간을 KST로 변환
+        const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+        const KR_TIME_DIFF = 9 * 60 * 60 * 1000;
+        const nowKrs = new Date(utc + KR_TIME_DIFF);
 
-        endTime = new Date(now);
-        endTime.setDate(endTime.getDate() + 2); // 다다음날 00:00
-        endTime.setHours(0, 0, 0, 0);
+        // 2. KST 기준으로 '내일'의 00:05 설정
+        const startKrs = new Date(nowKrs);
+        startKrs.setDate(startKrs.getDate() + 1);
+        startKrs.setHours(0, 5, 0, 0);
+
+        // 3. KST 기준으로 '내일'의 24:00 (다다음날 00:00) 설정
+        const endKrs = new Date(nowKrs);
+        endKrs.setDate(endKrs.getDate() + 2);
+        endKrs.setHours(0, 0, 0, 0);
+
+        // 4. 다시 UTC로 변환하여 DB 저장용 Date 객체 생성
+        startTime = new Date(startKrs.getTime() - KR_TIME_DIFF);
+        endTime = new Date(endKrs.getTime() - KR_TIME_DIFF);
+
         this.logger.log(
-          `Using default date range: ${startTime.toISOString()} ~ ${endTime.toISOString()}`,
+          `Using calculated date range (KST converted to UTC): ${startTime.toISOString()} ~ ${endTime.toISOString()}`,
         );
       }
 
