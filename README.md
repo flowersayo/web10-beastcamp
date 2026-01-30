@@ -19,7 +19,7 @@
     </p>
     <a href="https://chaegang.notion.site/WEB_10-TEAM_PROJECT-2c4748edda9b801ba43cc3708bf1fd54?source=copy_link" target="_blank">개발팀노션</a> &nbsp; &nbsp; |&nbsp; &nbsp; 
     <a href="https://github.com/boostcampwm2025/web10-beastcamp/wiki" target="_blank">Wiki</a> &nbsp; &nbsp; |&nbsp; &nbsp;
- <a href="" target="_blank">Github Project </a> &nbsp; &nbsp; |&nbsp; &nbsp;
+ <a href="" target="_blank">Github Project </a> &nbsp; &nbsp; 
 </div>
 
 <br/><br/>
@@ -75,6 +75,7 @@
  
 </div>
 
+
 <table>
     <tr>
       <td align="center">공연 상세 화면 조회(인터파크)</td>
@@ -86,28 +87,26 @@
     </tr>
  </table>
 
-
  <table>
     <tr>
-       <td align="center">대기열 진입</td>
+      <td align="center">대기열 진입</td>
       <td align="center">보안문자 입력</td>
       <td align="center">구역 및 회차 선택</td>
-
     </tr>
     <tr>
-       <td align="center"></td>
+       <td align="center"><img src="https://github.com/user-attachments/assets/26d82d0d-8ab6-435d-a5c9-e782808a91f1" /></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/26d82d0d-8ab6-435d-a5c9-e782808a91f1" /></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/efb192ad-313f-4cd7-8e0c-f1bae154a00a" /></td>
-
     </tr>
  </table>
-
-
 
 ### 봇 트래픽 발생 
 
  - 봇을 활용해 실제 상황과 유사한 수준의 가상 트래픽을 생성
  - 실존 트래픽 경쟁에 가까운 환경을 제공
+
+
+
 
 ### 티켓팅 결과 피드백 & 랭킹 제공
 
@@ -115,7 +114,19 @@
 - 전체 소요 시간, 전체 사용자 대비 순위를 제공하여 피드백 
 - 각 티켓팅(예매) 진행 이후 랭킹(순위) 제공
 
-<img src="https://github.com/user-attachments/assets/2f77ed74-4616-4776-848c-3ce65dd98f98" />
+
+
+ <table>
+    <tr>
+      <td align="center">예매 피드백</td>
+      <td align="center">랭킹 시스템</td>
+    </tr>
+    <tr>
+      <td align="center"><img src="https://github.com/user-attachments/assets/2f77ed74-4616-4776-848c-3ce65dd98f98"/></td>
+      <td align="center"><img src="https://github.com/user-attachments/assets/26d82d0d-8ab6-435d-a5c9-e782808a91f1" /></td>
+    </tr>
+ </table>
+
 
 ### 실제 티켓팅 정보 연동
 
@@ -146,10 +157,12 @@
 
 ## 기술적 도전 
 > 수십만명 트래픽을 감당할 수 있는 대규모 시스템 설계를 목적으로 안정성, 가용성을 중시한 아키텍처를 설계했습니다.
+더 자세한 기술적 설계 여정은 Wiki ADR 문서를 참고해주세요.
 
 <img width="587" height="386" alt="Screenshot 2026-01-30 at 3 06 59 AM" src="https://github.com/user-attachments/assets/04a2dedc-0824-49cd-a679-e7862577611e" />
 <img width="869" height="512" alt="Screenshot 2026-01-30 at 2 12 26 AM" src="https://github.com/user-attachments/assets/3778af0f-333d-465d-886e-e440ed3f159d" />
 
+- [MSA 대기열 티켓 예매 시스템 설계](https://github.com/boostcampwm2025/web10-beastcamp/wiki/%ED%8B%B0%EC%BC%93-%EC%98%88%EB%A7%A4-%EB%8C%80%EA%B8%B0%EC%97%B4-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%84%A4%EA%B3%84)
 
 ---
 
