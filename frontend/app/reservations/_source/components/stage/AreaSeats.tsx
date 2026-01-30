@@ -1,6 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import {
+  useEffect,
+ useEffectEvent,
+} from "react";
 
 import {
   useReservationData,
@@ -17,11 +21,28 @@ export default function AreaSeats() {
 
   const { venue, blockGrades, grades } = useReservationData();
   const { area, selectedSeats } = useReservationState();
-  const { handleDeselectArea, handleToggleSeat } = useReservationDispatch();
+  const { handleDeselectArea, handleToggleSeat, handleRemoveSeat } =
+    useReservationDispatch();
   const { data: reservationData, refetch } = useReservationSeatsQuery(
     sessionId,
     area,
   );
+
+  const checkReservedSeats = useEffectEvent(() => {
+    if (!reservationData?.seats) return;
+
+    selectedSeats.forEach((seat, seatId) => {
+      const isReserved =
+        reservationData.seats[seat.rowNum - 1]?.[seat.colNum - 1];
+      if (isReserved) {
+        handleRemoveSeat(seatId);
+      }
+    });
+  });
+
+  useEffect(() => {
+    checkReservedSeats();
+  }, [reservationData]);
 
   const targetBlock = venue?.blocks.find((b) => String(b.id) === area);
   const blockGrade = blockGrades?.find((bg) => bg.blockId === targetBlock?.id);

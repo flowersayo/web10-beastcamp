@@ -4,6 +4,7 @@ import { createContext, ReactNode, use, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSelection from "@/hooks/useSelector";
 import { api, ApiError } from "@/lib/api/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useResult } from "@/contexts/ResultContext";
 import { RESERVATION_LIMIT } from "../constants/reservationConstants";
 import { Seat } from "../types/reservationType";
@@ -59,6 +60,8 @@ export function ReservationStateProvider({
     remove: handleRemoveSeat,
     reset: handleResetSeats,
   } = useSelection<string, Seat>(new Map(), { max: RESERVATION_LIMIT });
+
+  const queryClient = useQueryClient();
 
   const endSeatSelection = useTimeLogStore((state) => state.endSeatSelection); // 체류 시간 측정
 
@@ -131,6 +134,9 @@ export function ReservationStateProvider({
         }
         if (e.status === 400) {
           alert("이미 선점된 좌석입니다.");
+          queryClient.invalidateQueries({
+            queryKey: ["reservation-seats", sessionId, area],
+          });
           return;
         }
       }
