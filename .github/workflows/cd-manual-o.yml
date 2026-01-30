@@ -125,12 +125,10 @@ jobs:
             # 4. 배포 (Override 파일 생성 없이 환경변수로 이미지 주입)
             # 서버의 docker-compose.yml에 image: ...:${IMAGE_TAG} 설정이 되어있어야 함
 
-            export IMAGE_TAG=$IMAGE_TAG
-            export NCP_REGISTRY_URL=$NCP_REGISTRY_URL
-            export SERVICE_NAME=$SERVICE_NAME
+            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME
 
             docker compose pull $SERVICE_NAME
-            docker compose up -d --no-build $SERVICE_NAME
+            docker compose up -d --wait --no-build $SERVICE_NAME
 
             # 5. 디스크 청소
             docker image prune -af --filter "until=24h"
