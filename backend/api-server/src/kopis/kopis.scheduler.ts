@@ -20,15 +20,14 @@ export class KopisScheduler {
     private readonly dataSource: DataSource,
   ) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @Cron('0 0 0 * * *', { name: 'kopis-sync', timeZone: 'Asia/Seoul' })
+  @Cron('30 23 * * *', { name: 'kopis-sync', timeZone: 'Asia/Seoul' })
   async handleCron() {
     this.logger.log('Starting KOPIS data sync...');
     await this.syncPerformances();
     this.logger.log('KOPIS data sync completed.');
   }
 
-  async syncPerformances() {
+  async syncPerformances(startDate?: Date, endDate?: Date) {
     const performanceRepository = this.dataSource.getRepository(Performance);
     const sessionRepository = this.dataSource.getRepository(Session);
     const venueRepository = this.dataSource.getRepository(Venue);
@@ -70,20 +69,45 @@ export class KopisScheduler {
       const validDetails = details.filter((detail) => detail !== null);
 
       if (validDetails.length === 0) {
-        this.logger.log('No valid performances found from KOPIS');
+        this.logger.log(`No valid performances found from KOPIS `);
         return;
       }
 
-      this.logger.log(`Found ${validDetails.length} valid performances`);
+      this.logger.log(
+        `Found ${validDetails.length} valid performances - ${new Date().toString()}`,
+      );
 
-      // 00:05부터 익일 00:00까지 5분 단위로 TicketingDate 설정
-      const now = new Date();
-      const startTime = new Date(now);
-      startTime.setHours(0, 5, 0, 0);
+      // 날짜 범위 설정
+      let startTime: Date;
+      let endTime: Date;
 
-      const endTime = new Date(now);
-      endTime.setHours(0, 0, 0, 0);
-      endTime.setDate(endTime.getDate() + 1);
+      if (startDate && endDate) {
+        // 파라미터로 받은 날짜 사용
+        startTime = new Date(startDate);
+        endTime = new Date(endDate);
+        this.logger.log(
+          `Using provided date range: ${startTime.toISOString()} ~ ${endTime.toISOString()}`,
+        );
+
+        if (startTime > endTime) {
+          const message = `Invalid date range: Start date (${startTime.toISOString()}) is after end date (${endTime.toISOString()})`;
+          this.logger.warn(message);
+          throw new Error(message);
+        }
+      } else {
+        // 기본값: 23:30 실행 기준 다음날 00:05 ~ 다음날 24:00
+        const now = new Date();
+        startTime = new Date(now);
+        startTime.setDate(startTime.getDate() + 1); // 다음날
+        startTime.setHours(0, 5, 0, 0);
+
+        endTime = new Date(now);
+        endTime.setDate(endTime.getDate() + 2); // 다다음날 00:00
+        endTime.setHours(0, 0, 0, 0);
+        this.logger.log(
+          `Using default date range: ${startTime.toISOString()} ~ ${endTime.toISOString()}`,
+        );
+      }
 
       const currentTime = new Date(startTime);
       let performanceCount = 0;
@@ -209,11 +233,19 @@ export class KopisScheduler {
         blockGradesBuffer.length = 0;
       }
 
-      this.logger.log('\n=== Summary ===');
+      this.logger.log('=== Summary ===');
       this.logger.log(`Total Performances Scheduled: ${performanceCount}`);
       this.logger.log(`Total Sessions Scheduled: ${sessionCount}`);
     } catch (error) {
-      this.logger.error('KOPIS data sync failed:', error);
+      const isDateRangeError =
+        error instanceof Error &&
+        error.message.startsWith('Invalid date range');
+
+      if (!isDateRangeError) {
+        this.logger.error('KOPIS data sync failed:', error);
+      }
+
+      throw error;
     }
   }
 }
