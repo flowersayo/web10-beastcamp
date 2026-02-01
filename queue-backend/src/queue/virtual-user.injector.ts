@@ -111,7 +111,6 @@ export class VirtualUserInjector {
 
   private async injectBatch(count: number): Promise<void> {
     const { virtual } = this.configService;
-    const now = Date.now();
 
     for (let offset = 0; offset < count; offset += virtual.injectBatchSize) {
       const currentBatchSize = Math.min(
@@ -123,7 +122,7 @@ export class VirtualUserInjector {
       for (let i = 0; i < currentBatchSize; i++) {
         pipeline.zadd(
           REDIS_KEYS.WAITING_QUEUE,
-          now + offset + i,
+          Date.now() + offset + i,
           this.generateUserId(),
         );
       }
