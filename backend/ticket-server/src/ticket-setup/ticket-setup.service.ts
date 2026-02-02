@@ -76,6 +76,8 @@ export class TicketSetupService {
     try {
       await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'false');
       await this.redisService.del(REDIS_KEYS.CURRENT_TICKETING_SESSIONS);
+      await this.redisService.deleteAllExceptPrefix('config:');
+      await this.redisService.deleteAllExceptPrefixQueue('config:');
       this.logger.log('Ticketing closed (tear-down)');
 
       void this.redisService
