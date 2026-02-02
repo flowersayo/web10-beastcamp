@@ -1,27 +1,67 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import QueryProvider from '@/providers/QueryProvider';
-import { TicketProvider } from '../contexts/TicketContext';
-import { ResultProvider } from '../contexts/ResultContext';
-import { Toaster } from 'sonner';
-import { AuthProvider } from '@/contexts/AuthContext';
-import Header from './_source/components/Header';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import QueryProvider from "@/providers/QueryProvider";
+import { TicketProvider } from "../contexts/TicketContext";
+import { ResultProvider } from "../contexts/ResultContext";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Header from "./_source/components/Header";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: '내티켓',
-  description: '티켓팅 연습',
+  metadataBase: new URL("https://www.neticket.site"),
+  title: {
+    default: "내티켓 | 실전 같은 티켓팅 연습 서비스",
+    template: "%s | 내티켓",
+  },
+  description:
+    "인터파크, 예스24, 멜론티켓의 실제 티켓팅 환경을 재현한 무료 연습 사이트. 대기열, 좌석 선택, 피드백까지 실전처럼 연습하고 티켓팅 성공률을 높이세요.",
+  keywords: [
+    "티켓팅 연습",
+    "티켓팅 시뮬레이션",
+    "티켓팅 연습 사이트",
+    "인터파크 티켓팅 연습",
+    "예스24 티켓팅 연습",
+    "멜론티켓 티켓팅 연습",
+    "임영웅 티켓팅",
+    "내티켓",
+    "neticket",
+  ],
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "내티켓 | 실전 같은 티켓팅 연습 서비스",
+    description:
+      "티켓팅 실패는 이제 그만! 다양한 예매처 UI와 트래픽 상황을 완벽하게 재현했습니다.",
+    url: "https://www.neticket.site",
+    siteName: "내티켓",
+    locale: "ko_KR",
+    type: "website",
+    images: [
+      {
+        url: "/open_graph.png",
+        width: 1200,
+        height: 630,
+        alt: "내티켓 서비스 이미지",
+      },
+    ],
+  },
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
