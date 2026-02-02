@@ -48,6 +48,9 @@ export const metadata: Metadata = {
   verification: {
     google: "8rsMMOA_qKOvtut0rhVU-GF4enkFaTm0g0mOmjYUVWk",
   },
+  alternates: {
+    canonical: "https://www.neticket.site",
+  },
 
   openGraph: {
     title: SITE_TITLE,
