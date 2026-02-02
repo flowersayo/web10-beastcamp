@@ -19,14 +19,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_TITLE = "내티켓 - 티켓팅 연습 & 시뮬레이션";
+const SITE_DESCRIPTION =
+  "인터파크, 예스24, 멜론티켓의 실제 티켓팅 환경을 재현한 무료 연습 사이트. 대기열, 좌석 선택, 피드백까지 실전처럼 연습하고 티켓팅 성공률을 높이세요.";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.neticket.site"),
   title: {
-    default: "내티켓 | 실전 같은 티켓팅 연습 서비스",
+    default: SITE_TITLE,
     template: "%s | 내티켓",
   },
-  description:
-    "인터파크, 예스24, 멜론티켓의 실제 티켓팅 환경을 재현한 무료 연습 사이트. 대기열, 좌석 선택, 피드백까지 실전처럼 연습하고 티켓팅 성공률을 높이세요.",
+  description: SITE_DESCRIPTION,
   keywords: [
     "티켓팅 연습",
     "티켓팅 시뮬레이션",
@@ -42,10 +45,14 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google:
+      "google-site-verification=8rsMMOA_qKOvtut0rhVU-GF4enkFaTm0g0mOmjYUVWk",
+  },
+
   openGraph: {
-    title: "내티켓 | 실전 같은 티켓팅 연습 서비스",
-    description:
-      "티켓팅 실패는 이제 그만! 다양한 예매처 UI와 트래픽 상황을 완벽하게 재현했습니다.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: "https://www.neticket.site",
     siteName: "내티켓",
     locale: "ko_KR",
