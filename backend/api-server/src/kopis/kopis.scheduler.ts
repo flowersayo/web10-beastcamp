@@ -28,7 +28,11 @@ export class KopisScheduler {
     this.logger.log('KOPIS data sync completed.');
   }
 
-  async syncPerformances(startDate?: Date, endDate?: Date) {
+  async syncPerformances(
+    startDate?: Date,
+    endDate?: Date,
+    idIdentifier?: string,
+  ) {
     const performanceRepository = this.dataSource.getRepository(Performance);
     const sessionRepository = this.dataSource.getRepository(Session);
     const venueRepository = this.dataSource.getRepository(Venue);
@@ -136,7 +140,16 @@ export class KopisScheduler {
 
         const performanceEntity = this.kopisService.toPerformanceEntity(detail);
         performanceEntity.ticketingDate = new Date(currentTime);
-        performanceEntity.kopisId = `${detail.mt20id}_${performanceCount}`;
+        performanceEntity.ticketingDate = new Date(currentTime);
+
+        if (idIdentifier) {
+          // 수동 실행: ID 식별자와 타임스탬프(밀리초 + 루프 인덱스 보정) 사용
+          const uniqueTime = Date.now() + performanceCount;
+          performanceEntity.kopisId = `${detail.mt20id}_${idIdentifier}_${uniqueTime}`;
+        } else {
+          // 자동/기본 실행: 기존 방식 유지
+          performanceEntity.kopisId = `${detail.mt20id}_${performanceCount}`;
+        }
 
         try {
           const savedPerformance =
