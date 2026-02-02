@@ -1,19 +1,18 @@
 "use client";
 
 import CountdownTimer from "./CountdownTimer";
-import type { Performance, Session } from "@/types/performance";
-import type { VenueDetail } from "@/types/venue";
+import type { Performance } from "@/types/performance";
+
 import { useTicketingRouting } from "../../hooks/useTicketingRouting";
 import { useCountdown } from "../../hooks/useCountdown";
 import {
   formatTicketingTime,
   getTicketingStatusText,
 } from "../../utils/ticketingUtils";
+import Mounted from "@/components/ui/common/Mounted";
 
 interface TicketingControlsProps {
   performance?: Performance;
-  sessions?: Session[];
-  venue: VenueDetail | null;
 }
 
 export default function TicketingControls({
@@ -30,9 +29,15 @@ export default function TicketingControls({
           <p className="text-lg font-semibold text-white">
             {getTicketingStatusText(status)}
           </p>
-          <p className="text-sm text-white/80 mb-1">
-            {formatTicketingTime(performance.ticketing_date)}
-          </p>
+          <Mounted
+            fallback={
+              <p className="text-sm text-white/80 mb-1">시간 계산 중..</p>
+            }
+          >
+            <p className="text-sm text-white/80 mb-1">
+              {formatTicketingTime(performance.ticketing_date)}
+            </p>
+          </Mounted>
         </div>
       )}
 
