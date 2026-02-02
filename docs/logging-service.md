@@ -97,13 +97,27 @@ graph LR
 LOKI_URL=http://[MONITORING_INSTANCE_IP]:3100/loki/api/v1/push
 ```
 
-### 4.2. 실행 방법
-*   **모니터링 서버 (`monitoring-instance`):**
-    ```bash
-    docker compose -f monitoring/docker-compose.yml up -d
-    ```
-*   **애플리케이션 서버 (`queue-instance`, `backend-instance`):**
-    *   기존과 동일하게 `docker compose up -d` 실행 시 `promtail` 사이드카가 자동으로 함께 실행됨.
+### 4.2. 배포 및 실행 순서 (Deployment Strategy)
+
+안정적인 로그 수집을 위해 **모니터링 서버를 먼저 구축하고, 그 다음에 애플리케이션 서버를 배포**하는 순서를 권장합니다.
+
+#### Step 1: 모니터링 서버 (`monitoring-instance`) 선행 구축
+*   **방식:** 수동 배포 (Manual Deployment) 권장.
+    *   **이유:** 모니터링 시스템은 애플리케이션 배포 주기와 무관하게 **항상 실행 중(Always Up)**이어야 하며, 설정 변경이 잦지 않기 때문입니다.
+*   **절차:**
+    1.  서버에 SSH 접속 및 Git/Docker 설치.
+    2.  `git pull` 또는 `monitoring/` 폴더 전송.
+    3.  `docker compose -f monitoring/docker-compose.yml up -d` 실행.
+    4.  **IP 확보:** 해당 서버의 IP 주소를 확인하여 `LOKI_URL`을 생성합니다. (`http://[IP]:3100/...`)
+
+#### Step 2: 애플리케이션 서버 (`queue`, `backend`) 후행 배포
+*   **방식:** CI/CD 파이프라인.
+*   **절차:**
+    1.  각 서버의 운영 환경 변수(`.env`)에 위에서 확보한 `LOKI_URL`을 주입합니다.
+    2.  배포 파이프라인을 실행합니다.
+    3.  컨테이너가 뜨는 즉시 Promtail이 실행되어, 이미 살아있는 Loki로 초기화 로그를 전송합니다.
+
+> **💡 참고:** 만약 애플리케이션을 먼저 배포하면 Promtail이 Loki를 찾지 못해 에러 로그(`connection refused`)를 뿜으며 재시작을 반복합니다. (서비스 동작에는 영향 없으나 로그 수집 불가)
 
 ### 4.3. 로그 조회 및 활용 (Grafana Explore)
 
