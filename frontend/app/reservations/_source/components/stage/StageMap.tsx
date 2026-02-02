@@ -8,7 +8,7 @@ import { gradeInfoColor } from "../../data/seat";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "react-error-boundary";
 
-const AreaSeats = dynamic(() => import("./AreaSeats"), {
+const AreaSeats = dynamic(() => import("./seats/AreaSeats"), {
   ssr: false,
 });
 
