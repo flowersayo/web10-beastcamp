@@ -81,8 +81,8 @@ export class VirtualUserWorker implements OnModuleInit, OnModuleDestroy {
     userId: string,
     maxSeatPickAttempts: number,
   ): Promise<void> {
-    const sessionId = await this.redisService.get(
-      REDIS_KEYS.CURRENT_TICKETING_SESSION,
+    const sessionId = await this.redisService.srandmember(
+      REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
     );
     if (!sessionId) {
       this.logger.warn(
