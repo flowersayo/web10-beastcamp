@@ -9,6 +9,8 @@ import {
 import Redis from 'ioredis';
 import { QueueWorker } from './queue.worker';
 import { QueueConfigService } from './queue-config.service';
+import { runWithPubSubContext } from '@beastcamp/shared-nestjs/trace/pubsub-context';
+import { TraceService } from '@beastcamp/shared-nestjs/trace/trace.service';
 
 @Injectable()
 export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
@@ -21,6 +23,7 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: Redis,
     private readonly worker: QueueWorker,
     private readonly configService: QueueConfigService,
+    private readonly traceService: TraceService,
   ) {}
 
   async onModuleInit() {
@@ -30,7 +33,9 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
 
     this.subClient.on('message', (channel: string, message: string) => {
       if (channel === REDIS_CHANNELS.QUEUE_EVENT_DONE) {
-        void this.handleDoneEvent(message);
+        void runWithPubSubContext(this.traceService, message, (payload) =>
+          this.handleDoneEvent(payload.userId),
+        );
       }
     });
 
@@ -65,14 +70,14 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async handleDoneEvent(message: string) {
+  private async handleDoneEvent(userId: string) {
     try {
-      this.logger.log(`🔔 티켓팅 완료 메시지 수신: ${message}`);
-      await this.worker.removeActiveUser(message);
+      this.logger.log(`🔔 티켓팅 완료 메시지 수신: ${userId}`);
+      await this.worker.removeActiveUser(userId);
       await this.worker.processQueueTransfer();
     } catch (err) {
       this.logger.error(
-        `🚨 [트리거 오류] message: ${message}`,
+        `🚨 [트리거 오류] message: ${userId}`,
         (err as Error).stack,
       );
     }

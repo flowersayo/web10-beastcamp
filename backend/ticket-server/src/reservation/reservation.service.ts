@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { REDIS_CHANNELS, REDIS_KEYS } from '@beastcamp/shared-constants';
+import { TraceService } from '@beastcamp/shared-nestjs/trace/trace.service';
 import { RedisService } from '../redis/redis.service';
 import { CreateReservationRequestDto } from './dto/create-reservation-request.dto';
 import { GetReservationsResponseDto } from './dto/get-reservations-response.dto';
@@ -14,7 +15,10 @@ import { CreateReservationResponseDto } from './dto/create-reservation-response.
 export class ReservationService {
   private readonly logger = new Logger(ReservationService.name);
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly traceService: TraceService,
+  ) {}
 
   async getSeats(
     sessionId: number,
@@ -64,9 +68,12 @@ export class ReservationService {
 
   private async publishReservationDoneEvent(userId: string): Promise<void> {
     try {
+      const traceId = this.traceService.getOrCreateTraceId();
+
+      const payload = JSON.stringify({ userId, traceId });
       await this.redisService.publishToQueue(
         REDIS_CHANNELS.QUEUE_EVENT_DONE,
-        userId,
+        payload,
       );
       this.logger.log(
         `티켓팅 완료 이벤트(active token 만료): ${userId}님이 티켓팅을 완료했습니다.`,

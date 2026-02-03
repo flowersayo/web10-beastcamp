@@ -9,6 +9,9 @@ import { CaptchaModule } from './captcha/captcha.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { VirtualUserModule } from './virtual-user/virtual-user.module';
+import { GlobalExceptionFilter } from '@beastcamp/shared-nestjs/errors/global-exception.filter';
+import { TraceMiddleware } from '@beastcamp/shared-nestjs/trace/trace.middleware';
+import { TraceModule } from '@beastcamp/shared-nestjs/trace/trace.module';
 
 @Module({
   imports: [
@@ -22,9 +25,12 @@ import { VirtualUserModule } from './virtual-user/virtual-user.module';
     TicketSchedulerModule,
     CaptchaModule,
     VirtualUserModule,
+    TraceModule,
   ],
   controllers: [],
   providers: [
+    GlobalExceptionFilter,
+    TraceMiddleware,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
