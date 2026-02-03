@@ -1,7 +1,7 @@
-import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SendMessageDto {
+export class RegisterNicknameDto {
   @ApiProperty({
     description: '사용자 고유 ID (UUID)',
     example: '550e8400-e29b-41d4-a716-446655440000',
@@ -11,11 +11,12 @@ export class SendMessageDto {
   userId: string;
 
   @ApiProperty({
-    description: '채팅 메시지',
-    example: '안녕하세요!',
+    description: '사용자 닉네임',
+    example: '티켓팅마스터',
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(500)
-  message: string;
+  @MinLength(2)
+  @MaxLength(20)
+  nickname: string;
 }

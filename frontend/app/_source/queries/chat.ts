@@ -13,8 +13,13 @@ interface GetMessagesResponse {
 }
 
 interface SendMessageRequest {
-  nickname: string;
+  userId: string;
   message: string;
+}
+
+interface RegisterNicknameRequest {
+  userId: string;
+  nickname: string;
 }
 
 export const useChatMessagesQuery = () => {
@@ -28,6 +33,16 @@ export const useChatMessagesQuery = () => {
     },
     refetchInterval: 2000, // 2초마다 폴링
     staleTime: 0,
+  });
+};
+
+export const useRegisterNicknameMutation = () => {
+  return useMutation<{ success: boolean }, Error, RegisterNicknameRequest>({
+    mutationFn: async (data: RegisterNicknameRequest) => {
+      return await api.post<{ success: boolean }>('/chat/nickname', data, {
+        serverType: 'api',
+      });
+    },
   });
 };
 

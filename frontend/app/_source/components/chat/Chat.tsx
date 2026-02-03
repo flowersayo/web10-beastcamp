@@ -9,7 +9,7 @@ import {
 } from '@/app/_source/queries/chat';
 
 export default function Chat() {
-  const { nickname } = useAuth();
+  const { nickname, userId } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -22,18 +22,22 @@ export default function Chat() {
       alert('닉네임을 먼저 설정해주세요!');
       return;
     }
+    if (!userId) {
+      alert('사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
 
     sendMessage(
       {
-        nickname,
+        userId,
         message: inputValue.trim(),
       },
       {
         onSuccess: () => {
           setInputValue('');
         },
-        onError: () => {
-          alert('메시지 전송에 실패했습니다.');
+        onError: (error) => {
+          alert(error.message || '메시지 전송에 실패했습니다.');
         },
       },
     );

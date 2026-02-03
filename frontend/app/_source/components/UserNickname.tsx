@@ -3,11 +3,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRegisterNicknameMutation } from "@/app/_source/queries/chat";
 
 export default function UserNickname() {
-  const { nickname, setNickname } = useAuth();
+  const { nickname, setNickname, userId } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const { mutate: registerNickname, isPending } = useRegisterNicknameMutation();
 
   useEffect(() => {
     // 로컬스토리지에서 닉네임 불러오기
@@ -18,12 +20,25 @@ export default function UserNickname() {
   }, [setNickname]);
 
   const handleSaveNickname = () => {
-    if (inputValue.trim()) {
-      setNickname(inputValue.trim());
-      localStorage.setItem("userNickname", inputValue.trim());
-      setIsEditing(false);
-      setInputValue("");
-    }
+    if (!inputValue.trim() || !userId) return;
+
+    registerNickname(
+      {
+        userId,
+        nickname: inputValue.trim(),
+      },
+      {
+        onSuccess: () => {
+          setNickname(inputValue.trim());
+          localStorage.setItem("userNickname", inputValue.trim());
+          setIsEditing(false);
+          setInputValue("");
+        },
+        onError: (error) => {
+          alert(error.message || "닉네임 등록에 실패했습니다.");
+        },
+      }
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -45,9 +60,11 @@ export default function UserNickname() {
           onKeyDown={handleKeyPress}
           onBlur={handleSaveNickname}
           placeholder="닉네임 입력"
-          maxLength={12}
+          minLength={2}
+          maxLength={20}
+          disabled={isPending}
           autoFocus
-          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
         />
       </div>
     );
