@@ -8,6 +8,7 @@ import { VenuesModule } from './venues/venues.module';
 import { PerformancesModule } from './performances/performances.module';
 import { SeedingModule } from './seeding/seeding.module';
 import { KopisModule } from './kopis/kopis.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { KopisModule } from './kopis/kopis.module';
     PerformancesModule,
     SeedingModule,
     KopisModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [],
