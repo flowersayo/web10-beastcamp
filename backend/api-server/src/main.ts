@@ -3,13 +3,11 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { getWinstonLogger } from '@beastcamp/backend-config';
-import type { INestApplication } from '@nestjs/common';
 
 async function bootstrap() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const app = (await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(AppModule, {
     logger: getWinstonLogger('api-server'),
-  })) as INestApplication;
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     // CORS 설정
@@ -23,6 +21,8 @@ async function bootstrap() {
       credentials: true,
     });
   }
+
+  app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
     new ValidationPipe({

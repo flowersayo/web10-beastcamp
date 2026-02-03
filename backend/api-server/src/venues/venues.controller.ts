@@ -14,7 +14,7 @@ import { GetVenueResponseDto } from './dto/get-venue-response.dto';
 import { CreateBlocksRequestDto } from './dto/create-blocks-request.dto';
 
 @ApiTags('공연장')
-@Controller('api/venues')
+@Controller('venues')
 export class VenuesController {
   constructor(private readonly venuesService: VenuesService) {}
 

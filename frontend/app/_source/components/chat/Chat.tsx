@@ -3,87 +3,56 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageCircle, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-
-interface ChatMessage {
-  id: string;
-  nickname: string;
-  message: string;
-  timestamp: string;
-}
+import {
+  useChatMessagesQuery,
+  useSendMessageMutation,
+} from '@/app/_source/queries/chat';
 
 export default function Chat() {
   const { nickname } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002';
+  const { data: messages = [] } = useChatMessagesQuery();
+  const { mutate: sendMessage, isPending } = useSendMessageMutation();
 
-  // 메시지 목록 가져오기
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/chat/messages`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages);
-      }
-    } catch (error) {
-      console.error('메시지 가져오기 실패:', error);
-    }
-  };
-
-  // 메시지 전송
-  const sendMessage = async () => {
+  const handleSendMessage = () => {
     if (!inputValue.trim()) return;
     if (!nickname) {
       alert('닉네임을 먼저 설정해주세요!');
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/chat/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    sendMessage(
+      {
+        nickname,
+        message: inputValue.trim(),
+      },
+      {
+        onSuccess: () => {
+          setInputValue('');
         },
-        body: JSON.stringify({
-          nickname,
-          message: inputValue.trim(),
-        }),
-      });
-
-      if (response.ok) {
-        setInputValue('');
-        await fetchMessages();
-      }
-    } catch (error) {
-      console.error('메시지 전송 실패:', error);
-      alert('메시지 전송에 실패했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
+        onError: () => {
+          alert('메시지 전송에 실패했습니다.');
+        },
+      },
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
-  // 초기 메시지 로드 및 폴링
+  // 새 메시지 시 스크롤 하단으로 (채팅 영역 내에서만)
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 2000); // 2초마다 새 메시지 체크
-    return () => clearInterval(interval);
-  }, []);
-
-  // 새 메시지 시 스크롤 하단으로
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
   }, [messages]);
 
   const formatTime = (timestamp: string) => {
@@ -181,12 +150,12 @@ export default function Chat() {
               onKeyPress={handleKeyPress}
               placeholder="메시지를 입력하세요..."
               maxLength={500}
-              disabled={isLoading}
+              disabled={isPending}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
             />
             <button
-              onClick={sendMessage}
-              disabled={isLoading || !inputValue.trim()}
+              onClick={handleSendMessage}
+              disabled={isPending || !inputValue.trim()}
               className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               <Send className="w-4 h-4" />
