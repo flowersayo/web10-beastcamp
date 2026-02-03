@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import useSelection from "@/hooks/useSelector";
 import { NolSeat } from "@/app/reservations/_source/types/reservationType";
 import { RESERVATION_LIMIT } from "@/app/reservations/_source/constants/reservationConstants";
+import { useTimeLogStore } from "@/hooks/timeLogStore";
 
 interface ReservationContextValue {
   selectedSeats: ReadonlyMap<string, NolSeat>;
@@ -27,17 +28,13 @@ export function NolReservationProvider({ children }: ReservationProviderProps) {
     remove: handleRemoveSeat,
     reset: handleResetSeats,
   } = useSelection<string, NolSeat>(new Map(), { max: RESERVATION_LIMIT });
+  const endSeatSelection = useTimeLogStore((state) => state.endSeatSelection);
 
   const router = useRouter();
 
   const handleClickReserve = () => {
-    try {
-      throw new Error("예매 실패");
-      router.push("/result");
-    } catch (e) {
-      console.error(e);
-      alert("예매에 실패했습니다. 다시 시도해주세요.");
-    }
+    endSeatSelection();
+    router.push("/result");
   };
 
   const value: ReservationContextValue = {
