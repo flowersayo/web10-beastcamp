@@ -5,6 +5,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchCaptcha, verifyCaptcha } from "@/services/ticket";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface CaptchaVerificationProps {
   onVerified: () => void;
@@ -20,6 +21,8 @@ export function CaptchaVerification({
   const [error, setError] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
 
   const { token } = useAuth();
 
@@ -99,6 +102,11 @@ export function CaptchaVerification({
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "보안 문자 검증에 실패했습니다.";
+      // 401시 메인 이동
+      if (err instanceof Error && err.message.includes("401")) {
+        alert("인증이 만료되었습니다. 메인으로 이동합니다.");
+        router.replace("/");
+      }
       // 에러 표시하고 입력창 리셋 후 포커스
       setError(errorMsg);
       setUserInput("");
