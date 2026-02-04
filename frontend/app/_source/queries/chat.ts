@@ -31,8 +31,8 @@ export const useChatMessagesQuery = () => {
       });
       return res.messages;
     },
-    refetchInterval: 2000, // 2초마다 폴링
-    staleTime: 0,
+    staleTime: Infinity, // 수동 새로고침만 사용
+    gcTime: Infinity, // 캐시 유지
   });
 };
 

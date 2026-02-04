@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   useChatMessagesQuery,
@@ -13,7 +13,7 @@ export default function Chat() {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages = [] } = useChatMessagesQuery();
+  const { data: messages = [], refetch, isRefetching } = useChatMessagesQuery();
   const { mutate: sendMessage, isPending } = useSendMessageMutation();
 
   const handleSendMessage = () => {
@@ -71,14 +71,26 @@ export default function Chat() {
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
       {/* 헤더 */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <MessageCircle className="w-6 h-6 text-white" />
-          <div>
-            <h2 className="text-xl font-bold text-white">방명록 </h2>
-            <p className="text-sm text-purple-100">
-              서비스 이용 후기를 남겨주세요!
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-6 h-6 text-white" />
+            <div>
+              <h2 className="text-xl font-bold text-white">방명록 </h2>
+              <p className="text-sm text-purple-100">
+                서비스 이용 후기를 남겨주세요!
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="메시지 새로고침"
+          >
+            <RefreshCw
+              className={`w-5 h-5 text-white ${isRefetching ? 'animate-spin' : ''}`}
+            />
+          </button>
         </div>
       </div>
 
