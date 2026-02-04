@@ -22,5 +22,6 @@ export const useWaitingQueue = () => {
     currentOrder: currentData?.position,
     isFinished: !!currentData?.token,
     token: currentData?.token ?? null,
+    status: currentData?.status ?? "closed",
   };
 };
