@@ -5,6 +5,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchCaptcha, verifyCaptcha } from "@/services/ticket";
 import { useAuth } from "@/contexts/AuthContext";
+import { isExperienceMode } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface CaptchaVerificationProps {
   onVerified: () => void;
@@ -21,8 +23,11 @@ export function CaptchaVerification({
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { token } = useAuth();
+  const { token: realToken } = useAuth();
 
+  const isExperience = isExperienceMode();
+  const token = realToken || (isExperience ? "isExperience" : undefined);
+  const router = useRouter();
   // useSuspenseQuery로 보안 문자 데이터 로드
   // Suspense와 ErrorBoundary가 로딩/에러 상태를 처리
   // ssr: false로 클라이언트에서만 실행 (Blob URL hydration 에러 방지)
@@ -99,6 +104,11 @@ export function CaptchaVerification({
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "보안 문자 검증에 실패했습니다.";
+      // 401시 메인 이동
+      if (err instanceof Error && err.message.includes("401")) {
+        alert("인증이 만료되었습니다. 메인으로 이동합니다.");
+        router.replace("/");
+      }
       // 에러 표시하고 입력창 리셋 후 포커스
       setError(errorMsg);
       setUserInput("");

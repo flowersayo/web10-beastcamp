@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 export default function AreaSeatFallback({ error }: FallbackProps) {
   const router = useRouter();
   const isForbidden =
-    error instanceof ApiError && (error.status === 403 || error.status === 401);
+    error instanceof ApiError &&
+    (error.status === 403 || error.status === 401 || error.status === 400);
 
   useEffect(() => {
     if (isForbidden) {
