@@ -108,7 +108,7 @@ jobs:
           host: ${{ secrets[matrix.host_secret] }}
           username: ${{ secrets[matrix.user_secret] }}
           password: ${{ secrets[matrix.pass_secret] }}
-          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH
+          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
           script: |
             cd /app/web10-beastcamp
 
@@ -119,15 +119,20 @@ jobs:
             # 2. 서비스 위치로 이동
             [ "$SERVICE_NAME" == "queue-backend" ] && cd queue-backend || cd backend
 
-            # 3. NCP 레지스트리 로그인
+            # 3. 환경 변수 설정 (LOKI_URL 주입)
+            if [ ! -f .env ]; then touch .env; fi
+            sed -i '/^LOKI_URL=/d' .env
+            echo "LOKI_URL=$LOKI_URL" >> .env
+
+            # 4. NCP 레지스트리 로그인
             echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
 
-            # 4. 배포 (Clean Export 문법 반영 및 --wait 적용)
-            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME
+            # 5. 배포 (Clean Export 문법 반영 및 --wait 적용)
+            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME LOKI_URL
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
-            docker compose pull $SERVICE_NAME
-            docker compose up -d --wait --no-build $SERVICE_NAME
+            docker compose pull $SERVICE_NAME promtail
+            docker compose up -d --wait --no-build $SERVICE_NAME promtail
 
             # 5. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
             docker image prune -af --filter "until=24h"
@@ -139,6 +144,7 @@ jobs:
           NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
           NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
           NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
 
   # 4단계: 결과 요약
   deployment-summary:

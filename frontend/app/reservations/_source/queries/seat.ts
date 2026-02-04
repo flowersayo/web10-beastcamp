@@ -31,6 +31,7 @@ export const useReservationSeatsQuery = (
     },
     staleTime: 0,
     gcTime: 0,
+    retry: 0,
   });
 };
 

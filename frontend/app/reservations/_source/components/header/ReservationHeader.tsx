@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import SelectedSeatCount from "./SelectedSeatCount";
 import PerformanceInfo from "./PerformanceInfo";
+import Mounted from "@/components/ui/common/Mounted";
 
 export default function ReservationHeader() {
   return (
@@ -11,7 +12,10 @@ export default function ReservationHeader() {
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <PerformanceInfo />
+
+            <Mounted fallback={<div></div>}>
+              <PerformanceInfo />
+            </Mounted>
           </div>
           <div className="flex items-center gap-3">
             <SelectedSeatCount />
