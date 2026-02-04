@@ -66,7 +66,7 @@ async function request<T = unknown>(
   let baseUrl = getServerUrl(serverType, isMockMode);
 
   // 서버 사이드에서 상대 경로인 경우 절대 URL로 변환
-  if (typeof window === "undefined" && baseUrl.startsWith("/")) {
+  if (typeof window === "undefined" && baseUrl.startsWith("/") && !isMockMode) {
     baseUrl = `http://localhost:${process.env.PORT || 3000}${baseUrl}`;
   }
 
