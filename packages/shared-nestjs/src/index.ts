@@ -12,3 +12,4 @@ export * from "./errors/ticket.exception";
 export * from "./errors/queue.exception";
 export * from "./errors/auth.exception";
 export * from "./errors/global-exception.filter";
+export * from "./constants/error-codes";
