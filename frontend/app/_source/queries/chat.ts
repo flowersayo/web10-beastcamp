@@ -13,12 +13,10 @@ interface GetMessagesResponse {
 }
 
 interface SendMessageRequest {
-  userId: string;
   message: string;
 }
 
 interface RegisterNicknameRequest {
-  userId: string;
   nickname: string;
 }
 
@@ -26,20 +24,15 @@ interface GetNicknameResponse {
   nickname: string | null;
 }
 
-export const useNicknameQuery = (userId: string | undefined) => {
+export const useNicknameQuery = () => {
   return useQuery<string | null>({
-    queryKey: ['chat', 'nickname', userId],
+    queryKey: ['user', 'nickname'],
     queryFn: async () => {
-      if (!userId) return null;
-      const res = await api.get<GetNicknameResponse>(
-        `/chat/nickname?userId=${userId}`,
-        {
-          serverType: 'api',
-        },
-      );
+      const res = await api.get<GetNicknameResponse>('/user/nickname', {
+        serverType: 'api',
+      });
       return res.nickname;
     },
-    enabled: !!userId,
     staleTime: Infinity,
   });
 };
@@ -67,10 +60,10 @@ export const useRegisterNicknameMutation = () => {
         serverType: 'api',
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // 닉네임 등록 성공 시 캐시 업데이트
       queryClient.invalidateQueries({
-        queryKey: ['chat', 'nickname', variables.userId],
+        queryKey: ['user', 'nickname'],
       });
     },
   });

@@ -1,40 +1,29 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   useRegisterNicknameMutation,
   useNicknameQuery,
 } from "@/app/_source/queries/chat";
 
 export default function UserNickname() {
-  const { nickname, setNickname, userId } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const { mutate: registerNickname, isPending } = useRegisterNicknameMutation();
 
-  // 서버에서 닉네임 조회
-  const { data: serverNickname } = useNicknameQuery(userId);
-
-  useEffect(() => {
-    // 서버에서 닉네임을 가져와서 상태 업데이트
-    if (serverNickname) {
-      setNickname(serverNickname);
-    }
-  }, [serverNickname, setNickname]);
+  // 서버에서 닉네임 조회 (IP 기반)
+  const { data: nickname } = useNicknameQuery();
 
   const handleSaveNickname = () => {
-    if (!inputValue.trim() || !userId) return;
+    if (!inputValue.trim()) return;
 
     registerNickname(
       {
-        userId,
         nickname: inputValue.trim(),
       },
       {
         onSuccess: () => {
-          setNickname(inputValue.trim());
           setIsEditing(false);
           setInputValue("");
         },

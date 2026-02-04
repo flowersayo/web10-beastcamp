@@ -1,15 +1,15 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { MessageCircle, Send, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   useChatMessagesQuery,
   useSendMessageMutation,
+  useNicknameQuery,
 } from '@/app/_source/queries/chat';
 
 export default function Chat() {
-  const { nickname, userId } = useAuth();
+  const { data: nickname } = useNicknameQuery();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -22,14 +22,9 @@ export default function Chat() {
       alert('닉네임을 먼저 설정해주세요!');
       return;
     }
-    if (!userId) {
-      alert('사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
 
     sendMessage(
       {
-        userId,
         message: inputValue.trim(),
       },
       {
