@@ -23,7 +23,7 @@ import { CreateSessionRequestDto } from './dto/create-session-request.dto';
 import { GetSessionsResponseDto } from './dto/get-sessions-response.dto';
 
 @ApiTags('공연')
-@Controller('api/performances')
+@Controller('performances')
 @ApiExtraModels(GetSessionsResponseDto)
 export class PerformancesController {
   constructor(private readonly performancesService: PerformancesService) {}

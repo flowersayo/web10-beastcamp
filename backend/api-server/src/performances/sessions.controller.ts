@@ -22,7 +22,7 @@ import { CreateBlockGradeRequestDto } from './dto/create-block-grade-request.dto
 import { GetBlockGradeResponseDto } from './dto/get-block-grade-response.dto';
 
 @ApiTags('회차')
-@Controller('api/sessions')
+@Controller('sessions')
 @ApiExtraModels(GetBlockGradeResponseDto)
 export class SessionsController {
   constructor(private readonly performancesService: PerformancesService) {}
