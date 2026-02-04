@@ -5,16 +5,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { getWinstonLogger } from '@beastcamp/shared-nestjs/config/logger.config';
 import { GlobalExceptionFilter } from '@beastcamp/shared-nestjs/errors/global-exception.filter';
 import { TraceMiddleware } from '@beastcamp/shared-nestjs/trace/trace.middleware';
+import { TraceService } from '@beastcamp/shared-nestjs/trace/trace.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: getWinstonLogger('queue-backend'),
+    bufferLogs: true,
   });
-  app.use(cookieParser());
-  app.setGlobalPrefix('api');
 
   const traceMiddleware = app.get(TraceMiddleware);
   app.use(traceMiddleware.use.bind(traceMiddleware));
+
+  const traceService = app.get(TraceService);
+
+  app.useLogger(getWinstonLogger('queue-backend', traceService));
+
+  app.use(cookieParser());
+  app.setGlobalPrefix('api');
 
   app.useGlobalFilters(app.get(GlobalExceptionFilter));
 
