@@ -219,12 +219,13 @@ jobs:
             sed -i '/^LOKI_URL=/d' .env
             echo "LOKI_URL=$LOKI_URL" >> .env
 
-                        echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
-                        printf "services:\n  queue-backend:\n    image: %s\n" "$NCP_REGISTRY_URL/beastcamp-queue-backend:$IMAGE_TAG" > /tmp/queue.override.yml
-                        docker compose -f docker-compose.yml -f /tmp/queue.override.yml pull queue-backend promtail cadvisor
-                        docker compose -f docker-compose.yml -f /tmp/queue.override.yml up -d --no-build queue-backend promtail cadvisor
-                        
-                        # 이전 이미지 정리            docker image prune -f
+            echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
+            printf "services:\n  queue-backend:\n    image: %s\n" "$NCP_REGISTRY_URL/beastcamp-queue-backend:$IMAGE_TAG" > /tmp/queue.override.yml
+            docker compose -f docker-compose.yml -f /tmp/queue.override.yml pull queue-backend promtail cadvisor
+            docker compose -f docker-compose.yml -f /tmp/queue.override.yml up -d --no-build queue-backend promtail cadvisor
+            
+            # 이전 이미지 정리
+            docker image prune -f
 
             echo "✅ Queue Backend deployed successfully"
         env:
