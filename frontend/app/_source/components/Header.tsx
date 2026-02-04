@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import UserNickname from './UserNickname';
-import { Ticket, Clock } from "lucide-react";
-import Link from "next/link";
+import { Ticket, Clock } from 'lucide-react';
 
 export default function Header() {
   return (
@@ -25,7 +24,7 @@ export default function Header() {
               </p>
             </div>
           </Link>
-      <UserNickname />
+          <UserNickname />
           <nav className="flex items-center gap-6">
             <Link
               href="/server-time"
