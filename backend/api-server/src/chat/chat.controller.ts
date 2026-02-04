@@ -24,10 +24,12 @@ export class ChatController {
     status: 400,
     description: '이미 사용 중인 닉네임',
   })
-  registerNickname(@Body() registerNicknameDto: RegisterNicknameDto): {
+  async registerNickname(
+    @Body() registerNicknameDto: RegisterNicknameDto,
+  ): Promise<{
     success: boolean;
-  } {
-    this.chatService.registerNickname(
+  }> {
+    await this.chatService.registerNickname(
       registerNicknameDto.userId,
       registerNicknameDto.nickname,
     );
@@ -41,8 +43,8 @@ export class ChatController {
     description: '채팅 메시지 목록',
     type: GetMessagesResponseDto,
   })
-  getMessages(): GetMessagesResponseDto {
-    const messages = this.chatService.getAllMessages();
+  async getMessages(): Promise<GetMessagesResponseDto> {
+    const messages = await this.chatService.getAllMessages();
     return { messages };
   }
 
@@ -57,8 +59,10 @@ export class ChatController {
     status: 400,
     description: '닉네임을 먼저 설정해주세요',
   })
-  sendMessage(@Body() sendMessageDto: SendMessageDto): ChatMessageResponseDto {
-    return this.chatService.addMessage(
+  async sendMessage(
+    @Body() sendMessageDto: SendMessageDto,
+  ): Promise<ChatMessageResponseDto> {
+    return await this.chatService.addMessage(
       sendMessageDto.userId,
       sendMessageDto.message,
     );
