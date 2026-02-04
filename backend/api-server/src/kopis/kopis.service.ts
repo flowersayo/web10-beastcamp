@@ -12,7 +12,6 @@ import {
   KopisPerformanceDetail,
 } from './interfaces/kopis.interfaces';
 import { Performance } from '../performances/entities/performance.entity';
-import { formatToKstString } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class KopisService {
@@ -294,7 +293,7 @@ export class KopisService {
     performance.posterUrl = detail.poster;
 
     const ticketingDate = this.parseKopisDate(detail.prfpdfrom);
-    performance.ticketingDate = formatToKstString(ticketingDate ?? new Date());
+    performance.ticketingDate = ticketingDate ?? new Date();
 
     const platform = this.getSupportedPlatform(detail);
     performance.platform = platform ?? 'nol-ticket';
@@ -339,8 +338,8 @@ export class KopisService {
    * @param detail KOPIS 공연 상세 정보
    * @returns 공연 세션 일정 배열
    */
-  parseSessionDates(detail: KopisPerformanceDetail): string[] {
-    const sessions: string[] = [];
+  parseSessionDates(detail: KopisPerformanceDetail): Date[] {
+    const sessions: Date[] = [];
 
     const startDate = this.parseKopisDate(detail.prfpdfrom);
     const endDate = this.parseKopisDate(detail.prfpdto);
@@ -372,7 +371,7 @@ export class KopisService {
       // 파싱 실패 시 시작일 19:00로 기본 세션 하나 생성
       const defaultSession = new Date(startDate);
       defaultSession.setHours(19, 0, 0, 0);
-      sessions.push(formatToKstString(defaultSession));
+      sessions.push(defaultSession);
       return sessions;
     }
 
@@ -387,7 +386,7 @@ export class KopisService {
         if (dayMap[day] === dayOfWeek) {
           const sessionDate = new Date(currentDate);
           sessionDate.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
-          sessions.push(formatToKstString(sessionDate));
+          sessions.push(sessionDate);
         }
       }
 

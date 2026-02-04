@@ -9,7 +9,6 @@ import { Grade } from '../performances/entities/grade.entity';
 import { BlockGrade } from '../performances/entities/block-grade.entity';
 import { VENUES_DATA } from './data/venues.data';
 import { PERFORMANCE_NAMES, BLOCK_GRADE_RULES } from './data/performances.data';
-import { formatToKstString } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class SeedingService implements OnApplicationBootstrap {
@@ -80,7 +79,7 @@ export class SeedingService implements OnApplicationBootstrap {
       const performance = new Performance(
         undefined,
         perfName,
-        formatToKstString(new Date(currentTime)),
+        new Date(currentTime),
         platform,
         `https://kopis.or.kr/upload/pfmPoster/PF_PF282670_260106_112803.jpg`,
       );
@@ -97,7 +96,7 @@ export class SeedingService implements OnApplicationBootstrap {
 
         const session = new Session(
           savedPerformance.id,
-          formatToKstString(sessionTime),
+          sessionTime,
           targetVenue.id,
         );
         const savedSession = await this.sessionsRepository.save(session); // ID 필요

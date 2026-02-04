@@ -6,7 +6,7 @@ export class Performance {
   constructor(
     kopisId?: string,
     performanceName?: string,
-    ticketingDate?: string,
+    ticketingDate?: Date,
     platform?: 'nol-ticket' | 'yes24' | 'melon-ticket' | 'interpark',
     posterUrl?: string,
     platformTicketingUrl?: string,
@@ -46,13 +46,12 @@ export class Performance {
   performanceName: string;
 
   @Column({
-    type: 'varchar',
-    length: 30,
+    type: 'datetime',
     name: 'ticketing_date',
-    comment: '티켓팅 일시 (ISO 8601 with KST offset)',
+    comment: '티켓팅 일시 (ISO 8601)',
     unique: true,
   })
-  ticketingDate: string;
+  ticketingDate: Date;
 
   @Column({
     type: 'varchar',
