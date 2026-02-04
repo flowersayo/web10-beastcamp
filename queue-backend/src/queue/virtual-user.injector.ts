@@ -150,7 +150,11 @@ export class VirtualUserInjector {
       const hasError = results?.some(([err]) => err);
       if (hasError) {
         this.logger.error('대기열 주입 실패', { results });
-        throw new Error('waiting queue injection failed');
+        throw new QueueException(
+          QUEUE_ERROR_CODES.QUEUE_VIRTUAL_INJECT_FAILED,
+          '대기열 주입에 실패했습니다.',
+          500,
+        );
       }
 
       if (virtual.injectBatchDelayMs > 0 && offset + currentBatchSize < count) {
