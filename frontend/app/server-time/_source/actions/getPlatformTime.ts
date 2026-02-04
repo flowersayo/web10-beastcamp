@@ -1,5 +1,7 @@
 "use server";
 
+import { ALLOWED_HOSTS } from "../constants/allowList";
+
 interface ServerTimeResponse {
   serverDate: number; // 타겟 서버(인터파크)의 Date 헤더 시간
   fetchedAt: number; // 위 데이터를 가져왔을 때의 우리 서버 시간 (캐시 생성 시점)
@@ -14,16 +16,16 @@ const globalCache: Record<
 > = {};
 const CACHE_TTL = 1000; // 1초 유지
 
-import { TICKETING_SITES } from "@/constants/ticketingSites";
-
-const ALLOWED_ORIGINS = TICKETING_SITES.map((site) => site.url);
-
 export async function getPlatformTime(
   baseUrl: string,
 ): Promise<ServerTimeResponse | null> {
-  const isAllowed = ALLOWED_ORIGINS.some((origin) =>
-    baseUrl.startsWith(origin),
-  );
+  let isAllowed = false;
+  try {
+    const { host } = new URL(baseUrl);
+    isAllowed = ALLOWED_HOSTS.has(host);
+  } catch {
+    return null;
+  }
 
   if (!isAllowed) {
     return null;
