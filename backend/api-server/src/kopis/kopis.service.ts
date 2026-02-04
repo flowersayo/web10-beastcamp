@@ -12,7 +12,6 @@ import {
   KopisPerformanceDetail,
 } from './interfaces/kopis.interfaces';
 import { Performance } from '../performances/entities/performance.entity';
-import { formatToKstString } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class KopisService {
@@ -38,9 +37,11 @@ export class KopisService {
   constructor(private readonly httpService: HttpService) {}
 
   private formatDate(date: Date): string {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstDate = new Date(date.getTime() + kstOffset);
+    const yyyy = kstDate.getUTCFullYear();
+    const mm = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(kstDate.getUTCDate()).padStart(2, '0');
     return `${yyyy}${mm}${dd}`;
   }
 
@@ -294,7 +295,7 @@ export class KopisService {
     performance.posterUrl = detail.poster;
 
     const ticketingDate = this.parseKopisDate(detail.prfpdfrom);
-    performance.ticketingDate = formatToKstString(ticketingDate ?? new Date());
+    performance.ticketingDate = ticketingDate ?? new Date();
 
     const platform = this.getSupportedPlatform(detail);
     performance.platform = platform ?? 'nol-ticket';
@@ -321,11 +322,14 @@ export class KopisService {
       const parts = dateStr.split('.');
       if (parts.length !== 3) return null;
 
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
+      const year = parts[0];
+      const month = parts[1].padStart(2, '0');
+      const day = parts[2].padStart(2, '0');
 
-      const date = new Date(year, month, day);
+      // KST(UTC+9) 기준의 ISO 문자열 생성
+      const isoString = `${year}-${month}-${day}T00:00:00+09:00`;
+      const date = new Date(isoString);
+
       return isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
@@ -339,8 +343,8 @@ export class KopisService {
    * @param detail KOPIS 공연 상세 정보
    * @returns 공연 세션 일정 배열
    */
-  parseSessionDates(detail: KopisPerformanceDetail): string[] {
-    const sessions: string[] = [];
+  parseSessionDates(detail: KopisPerformanceDetail): Date[] {
+    const sessions: Date[] = [];
 
     const startDate = this.parseKopisDate(detail.prfpdfrom);
     const endDate = this.parseKopisDate(detail.prfpdto);
@@ -369,29 +373,53 @@ export class KopisService {
     const matches = [...normalizedGuidance.matchAll(pattern)];
 
     if (matches.length === 0) {
-      // 파싱 실패 시 시작일 19:00로 기본 세션 하나 생성
-      const defaultSession = new Date(startDate);
-      defaultSession.setHours(19, 0, 0, 0);
-      sessions.push(formatToKstString(defaultSession));
+      // 파싱 실패 시 시작일 19:00 (KST)로 설정
+      // startDate is a Date object (absolute time).
+      // We must use KST components to construct the default session time.
+
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstStart = new Date(startDate.getTime() + kstOffset);
+      const startIsoParts = {
+        year: kstStart.getUTCFullYear(),
+        month: String(kstStart.getUTCMonth() + 1).padStart(2, '0'),
+        day: String(kstStart.getUTCDate()).padStart(2, '0'),
+      };
+
+      const defaultSessionIso = `${startIsoParts.year}-${startIsoParts.month}-${startIsoParts.day}T19:00:00+09:00`;
+      sessions.push(new Date(defaultSessionIso));
       return sessions;
     }
 
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const dayOfWeek = currentDate.getDay();
+      // Calculate current date's KST day of week and components
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstCurrent = new Date(currentDate.getTime() + kstOffset);
+
+      const dayOfWeek = kstCurrent.getUTCDay();
+      const currentYear = kstCurrent.getUTCFullYear();
+      const currentMonth = String(kstCurrent.getUTCMonth() + 1).padStart(
+        2,
+        '0',
+      );
+      const currentDay = String(kstCurrent.getUTCDate()).padStart(2, '0');
 
       // 현재 요일에 해당하는 공연 시간 찾기
       for (const match of matches) {
         const [, day, hour, minute] = match;
+        const hourPadded = hour.padStart(2, '0');
+        const minutePadded = minute.padStart(2, '0');
+
         if (dayMap[day] === dayOfWeek) {
-          const sessionDate = new Date(currentDate);
-          sessionDate.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
-          sessions.push(formatToKstString(sessionDate));
+          // Construct Explicit KST ISO String
+          const isoString = `${currentYear}-${currentMonth}-${currentDay}T${hourPadded}:${minutePadded}:00+09:00`;
+          sessions.push(new Date(isoString));
         }
       }
 
-      currentDate.setDate(currentDate.getDate() + 1);
+      // Add 24 hours to proceed to next day
+      currentDate.setTime(currentDate.getTime() + 24 * 60 * 60 * 1000);
     }
 
     return sessions;

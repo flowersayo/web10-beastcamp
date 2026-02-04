@@ -15,7 +15,7 @@ export class GetSessionsResponseDto {
     description: '공연 회차 일시 (ISO 8601)',
     example: '2026-01-14T19:00:00Z',
   })
-  sessionDate: string;
+  sessionDate: Date;
 
   static fromEntity(session: Session): GetSessionsResponseDto {
     const dto = new GetSessionsResponseDto();
