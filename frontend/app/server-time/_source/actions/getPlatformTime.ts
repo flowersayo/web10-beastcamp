@@ -19,9 +19,11 @@ const CACHE_TTL = 1000; // 1초 유지
 export async function getPlatformTime(
   baseUrl: string,
 ): Promise<ServerTimeResponse | null> {
+  const normalizedUrl = baseUrl.replace(/\/$/, "");
+
   let isAllowed = false;
   try {
-    const { host } = new URL(baseUrl);
+    const { host } = new URL(normalizedUrl);
     isAllowed = ALLOWED_HOSTS.has(host);
   } catch {
     return null;
@@ -33,7 +35,7 @@ export async function getPlatformTime(
 
   const now = Date.now();
 
-  const cached = globalCache[baseUrl];
+  const cached = globalCache[normalizedUrl];
   if (cached && cached.expiresAt > now) {
     return {
       serverDate: cached.serverDate,
@@ -43,8 +45,7 @@ export async function getPlatformTime(
   }
 
   try {
-    const cleanUrl = baseUrl.replace(/\/$/, "");
-    const targetUrl = `${cleanUrl}/favicon.ico`;
+    const targetUrl = `${normalizedUrl}/favicon.ico`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -61,7 +62,7 @@ export async function getPlatformTime(
 
       if (!response.ok) {
         console.warn(
-          `[ServerTime] Fetch failed status: ${response.status} for ${baseUrl}`,
+          `[ServerTime] Fetch failed status: ${response.status} for ${normalizedUrl}`,
         );
         return null;
       }
@@ -74,7 +75,7 @@ export async function getPlatformTime(
       const serverDate = new Date(dateHeader).getTime();
       const fetchedAt = Date.now();
 
-      globalCache[baseUrl] = {
+      globalCache[normalizedUrl] = {
         serverDate,
         fetchedAt,
         expiresAt: fetchedAt + CACHE_TTL,
@@ -90,9 +91,9 @@ export async function getPlatformTime(
     }
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      console.warn(`[ServerTime] Fetch timeout for ${baseUrl}`);
+      console.warn(`[ServerTime] Fetch timeout for ${normalizedUrl}`);
     } else {
-      console.error(`Server Time Fetch Error (${baseUrl}):`, error);
+      console.error(`Server Time Fetch Error (${normalizedUrl}):`, error);
     }
     return null;
   }
