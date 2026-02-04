@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useContext, ReactNode, useEffect } from "react";
+import { createContext, useState, useContext, ReactNode } from "react";
 import { getUserId } from "@/lib/user-id";
 
 interface AuthContextValue {
@@ -15,12 +15,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string>("");
-
-  useEffect(() => {
-    // 클라이언트 사이드에서만 userId 가져오기
-    setUserId(getUserId());
-  }, []);
+  // 초기 렌더링 시 한 번만 getUserId() 호출
+  const [userId] = useState<string>(() => {
+    // 서버 사이드 렌더링 시 빈 문자열 반환
+    if (typeof window === 'undefined') return '';
+    return getUserId();
+  });
 
   const value: AuthContextValue = { token, setToken, nickname, setNickname, userId };
 
