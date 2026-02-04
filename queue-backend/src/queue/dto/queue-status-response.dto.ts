@@ -5,6 +5,9 @@ export class QueueStatusResponseDto implements QueueStatusResponse {
   @ApiProperty({ nullable: true, description: '대기 순번', example: 1 })
   position: number | null;
 
+  @ApiProperty({ description: '상태', example: 'open' })
+  status: 'open' | 'closed';
+
   @ApiProperty({
     required: false,
     description: '활성 토큰',
