@@ -44,35 +44,54 @@ export async function getPlatformTime(
     const cleanUrl = baseUrl.replace(/\/$/, "");
     const targetUrl = `${cleanUrl}/favicon.ico`;
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      cache: "no-store",
-      headers: {
-        "User-Agent": "Server-Time-Proxy",
-      },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const dateHeader = response.headers.get("date");
-    if (!dateHeader) {
-      return null;
+    try {
+      const response = await fetch(targetUrl, {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Server-Time-Proxy",
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(
+          `[ServerTime] Fetch failed status: ${response.status} for ${baseUrl}`,
+        );
+        return null;
+      }
+
+      const dateHeader = response.headers.get("date");
+      if (!dateHeader) {
+        return null;
+      }
+
+      const serverDate = new Date(dateHeader).getTime();
+      const fetchedAt = Date.now();
+
+      globalCache[baseUrl] = {
+        serverDate,
+        fetchedAt,
+        expiresAt: fetchedAt + CACHE_TTL,
+      };
+
+      return {
+        serverDate,
+        fetchedAt,
+        serverNow: fetchedAt,
+      };
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const serverDate = new Date(dateHeader).getTime();
-    const fetchedAt = Date.now();
-
-    globalCache[baseUrl] = {
-      serverDate,
-      fetchedAt,
-      expiresAt: fetchedAt + CACHE_TTL,
-    };
-
-    return {
-      serverDate,
-      fetchedAt,
-      serverNow: fetchedAt,
-    };
   } catch (error) {
-    console.error(`Server Time Fetch Error (${baseUrl}):`, error);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.warn(`[ServerTime] Fetch timeout for ${baseUrl}`);
+    } else {
+      console.error(`Server Time Fetch Error (${baseUrl}):`, error);
+    }
     return null;
   }
 }
