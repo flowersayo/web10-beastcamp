@@ -3,7 +3,8 @@ import { HttpModule } from '@nestjs/axios';
 import { KopisService } from './kopis.service';
 import { KopisScheduler } from './kopis.scheduler';
 import { KopisController } from './kopis.controller';
-import { AxiosTraceInterceptor, TraceModule } from '@beastcamp/shared-nestjs';
+import { TraceModule } from '@beastcamp/shared-nestjs';
+import { AxiosTraceInterceptor } from '@beastcamp/shared-nestjs';
 
 @Module({
   imports: [HttpModule, TraceModule],

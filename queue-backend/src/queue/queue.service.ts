@@ -118,40 +118,47 @@ export class QueueService {
       return;
     }
 
-    await this.configService.sync();
-    if (!this.configService.virtual.enabled) {
-      return;
-    }
-
-    const lockKey = 'queue:started:ticketing';
-    const acquired = await this.redis.set(lockKey, 'OK', 'EX', 86400, 'NX');
-
-    if (acquired === 'OK') {
-      this.logger.log('🚀 가상 유저 주입 프로세스 시작');
-      try {
-        await this.virtualUserInjector.start();
-      } catch (error) {
-        await this.redis.del(lockKey);
-        const wrappedError =
-          error instanceof QueueException
-            ? error
-            : new QueueException(
-                QUEUE_ERROR_CODES.QUEUE_INJECTION_START_FAILED,
-                '가상 유저 주입 시작에 실패했습니다.',
-                500,
-              );
-        this.logger.error(
-          wrappedError.message,
-          error instanceof Error ? error.stack : undefined,
-          {
-            errorCode: wrappedError.errorCode,
-            lockKey,
-          },
-        );
+    try {
+      await this.configService.sync();
+      if (!this.configService.virtual.enabled) {
         return;
       }
+
+      const lockKey = 'queue:started:ticketing';
+      const acquired = await this.redis.set(lockKey, 'OK', 'EX', 86400, 'NX');
+
+      if (acquired === 'OK') {
+        this.logger.log('🚀 가상 유저 주입 프로세스 시작');
+        try {
+          await this.virtualUserInjector.start();
+        } catch (error) {
+          await this.redis.del(lockKey);
+          const wrappedError =
+            error instanceof QueueException
+              ? error
+              : new QueueException(
+                  QUEUE_ERROR_CODES.QUEUE_INJECTION_START_FAILED,
+                  '가상 유저 주입 시작에 실패했습니다.',
+                  500,
+                );
+          this.logger.error(
+            wrappedError.message,
+            error instanceof Error ? error.stack : undefined,
+            {
+              errorCode: wrappedError.errorCode,
+              lockKey,
+            },
+          );
+          return;
+        }
+      }
+      this.hasTriggeredInjection = true;
+    } catch (error) {
+      this.logger.error(
+        '가상 유저 주입 준비 중 오류가 발생했습니다.',
+        error instanceof Error ? error.stack : undefined,
+      );
     }
-    this.hasTriggeredInjection = true;
   }
 
   private async checkActiveStatus(userId: string) {

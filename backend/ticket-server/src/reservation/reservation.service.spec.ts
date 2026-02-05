@@ -29,6 +29,7 @@ describe('ReservationService', () => {
           provide: TraceService,
           useValue: {
             generateTraceId: jest.fn().mockReturnValue('trace-id'),
+            getOrCreateTraceId: jest.fn().mockReturnValue('trace-id'),
             runWithTraceId: jest
               .fn()
               .mockImplementation((_id: string, fn: () => unknown) => fn()),

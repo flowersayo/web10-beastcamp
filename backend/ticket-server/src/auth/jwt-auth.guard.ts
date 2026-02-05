@@ -43,13 +43,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
           401,
         );
       }
-      throw (
-        err ||
-        new AuthException(
-          AUTH_ERROR_CODES.ACTIVE_TOKEN_REQUIRED,
-          '인증 토큰이 필요합니다.',
-          401,
-        )
+
+      if (err instanceof AuthException) {
+        throw err;
+      }
+      throw new AuthException(
+        AUTH_ERROR_CODES.ACTIVE_TOKEN_REQUIRED,
+        err instanceof Error ? err.message : '인증 토큰이 필요합니다.',
+        401,
       );
     }
 

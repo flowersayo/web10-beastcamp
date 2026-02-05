@@ -93,7 +93,7 @@ export class QueueConfigService implements OnModuleInit {
           ? error
           : new QueueException(
               QUEUE_ERROR_CODES.QUEUE_CONFIG_SEED_FAILED,
-              '대기열 설정 시딩에 실패했습니다.',
+              `대기열 설정 시딩에 실패했습니다. (${error instanceof Error ? error.message : String(error)})`,
               500,
             );
       this.logger.error(wrappedError.message, error instanceof Error ? error.stack : undefined, {

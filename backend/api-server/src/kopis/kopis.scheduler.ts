@@ -34,9 +34,21 @@ export class KopisScheduler {
     await this.traceService.runWithTraceId(
       this.traceService.generateTraceId(),
       async () => {
+        const startTime = Date.now();
         this.logger.log('KOPIS 데이터 동기화 시작');
-        await this.syncPerformances();
-        this.logger.log('KOPIS 데이터 동기화 완료');
+        try {
+          await this.syncPerformances();
+          const duration = Date.now() - startTime;
+          this.logger.log(`KOPIS 데이터 동기화 완료 (${duration}ms)`);
+        } catch (error) {
+          const duration = Date.now() - startTime;
+
+          this.logger.error(`KOPIS 데이터 동기화 실패 (${duration}ms)`, {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          });
+          throw error;
+        }
       },
     );
   }
@@ -243,7 +255,7 @@ export class KopisScheduler {
               });
             }
           } else {
-            this.logger.warn('⚠️ 할당 가능한 공연장 없음');
+            this.logger.warn('할당 가능한 공연장 없음');
           }
         } catch (e) {
           if (isMySqlDuplicateEntryError(e)) {

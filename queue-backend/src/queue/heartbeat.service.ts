@@ -38,6 +38,8 @@ export class HeartbeatService {
         this.logger.debug('캐시 최대치 도달로 초기화');
       }
     } catch (error) {
+      // 💡 NOTE: 하트비트 업데이트는 부수적인 작업이므로 실패가 메인 로직(조회)에 영향을 주지 않도록 함.
+      // 실패 시 에러를 던지지 않고 로그만 남겨 관측성을 유지함.
       const wrappedError =
         error instanceof QueueException
           ? error
