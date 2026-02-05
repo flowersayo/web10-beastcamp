@@ -10,9 +10,11 @@ import { SeedingModule } from './seeding/seeding.module';
 import { KopisModule } from './kopis/kopis.module';
 import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
-import { GlobalExceptionFilter } from '@beastcamp/shared-nestjs/errors/global-exception.filter';
-import { TraceMiddleware } from '@beastcamp/shared-nestjs/trace/trace.middleware';
-import { TraceModule } from '@beastcamp/shared-nestjs/trace/trace.module';
+import {
+  GlobalExceptionFilter,
+  TraceMiddleware,
+  TraceModule,
+} from '@beastcamp/shared-nestjs';
 
 @Module({
   imports: [
