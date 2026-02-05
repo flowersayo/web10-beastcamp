@@ -24,7 +24,9 @@
 
 <br/><br/>
 
-![전체과정](https://github.com/user-attachments/assets/f508ce06-6bac-4035-8b77-7e7f913651fe)
+
+https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
+
 
 ## 팀원 소개
 <table>
