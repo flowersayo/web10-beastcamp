@@ -95,7 +95,7 @@
       <td align="center">구역 및 회차 선택</td>
     </tr>
     <tr>
-       <td align="center"><img src="https://github.com/user-attachments/assets/26d82d0d-8ab6-435d-a5c9-e782808a91f1" /></td>
+       <td align="center"><img src="https://github.com/user-attachments/assets/dced16f4-56e0-42eb-9919-4e736f668feb" /></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/26d82d0d-8ab6-435d-a5c9-e782808a91f1" /></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/efb192ad-313f-4cd7-8e0c-f1bae154a00a" /></td>
     </tr>
