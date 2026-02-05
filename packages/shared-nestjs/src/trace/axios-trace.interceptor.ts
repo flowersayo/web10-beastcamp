@@ -1,15 +1,19 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleInit, Optional } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import { TraceService } from "./trace.service";
 
 @Injectable()
 export class AxiosTraceInterceptor implements OnModuleInit {
   constructor(
-    private readonly httpService: HttpService,
+    @Optional() private readonly httpService: HttpService,
     private readonly traceService: TraceService
   ) {}
 
   onModuleInit(): void {
+    if (!this.httpService?.axiosRef) {
+      return;
+    }
+
     this.httpService.axiosRef.interceptors.request.use((config) => {
       const traceId = this.traceService.getOrCreateTraceId();
       config.headers = config.headers ?? {};
