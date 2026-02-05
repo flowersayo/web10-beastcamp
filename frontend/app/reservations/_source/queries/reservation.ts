@@ -8,6 +8,7 @@ interface ReservedSeat {
 }
 
 interface ReservationResult {
+  reserved_at: string;
   virtual_user_size?: number | null;
   rank: number;
   seats: ReservedSeat[];

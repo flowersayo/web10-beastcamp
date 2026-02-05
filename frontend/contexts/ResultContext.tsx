@@ -11,6 +11,7 @@ interface ReservationResult {
   rank: number;
   seats: ReservedSeat[];
   virtualUserSize: number;
+  reservedAt: string;
 }
 
 interface ResultContextValue {

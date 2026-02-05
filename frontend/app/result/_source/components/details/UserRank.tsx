@@ -2,11 +2,13 @@
 
 import { useResult } from "@/contexts/ResultContext";
 import { useEffect, useState } from "react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 
 export default function UserRank() {
   const { result } = useResult();
   const [animatedRank, setAnimatedRank] = useState(0);
   const [progressWidth, setProgressWidth] = useState(0);
+  const isExperience = useExperienceMode();
 
   const userRank = result?.rank ?? 0;
   const virtualUserSize =
@@ -39,7 +41,7 @@ export default function UserRank() {
     return () => clearInterval(timer);
   }, [result, userRank, virtualUserSize]);
 
-  if (!result) return null;
+  if (!result || isExperience) return null;
 
   const percentile = (userRank / virtualUserSize) * 100;
 
