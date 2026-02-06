@@ -1,0 +1,26 @@
+{
+  "name": "@beastcamp/shared-nestjs",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "devDependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/config": "^4.0.2",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/config": "^4.0.2"
+  },
+  "dependencies": {
+    "ioredis": "^5.9.2",
+    "nest-winston": "^1.10.2",
+    "winston": "^3.19.0"
+  }
+}

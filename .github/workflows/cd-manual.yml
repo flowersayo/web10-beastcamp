@@ -140,24 +140,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to backend server
-        env:
-          SERVER_HOST: ${{ secrets.BACKEND_SERVER_HOST }}
-          SERVER_USER: ${{ secrets.BACKEND_SERVER_USER }}
-          SERVER_PASSWORD: ${{ secrets.BACKEND_SERVER_PASSWORD }}
-          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
-          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
-          API_SERVER_CHANGED: ${{ needs.resolve-targets.outputs.api_server }}
-          TICKET_SERVER_CHANGED: ${{ needs.resolve-targets.outputs.ticket_server }}
-          TARGET_BRANCH: ${{ github.event.inputs.branch }}
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
-        run: |
-          # SSH 비밀번호 기반 접속 준비
-          sudo apt-get update -y
-          sudo apt-get install -y sshpass
-
-          # 백엔드 서버에서 빌드 및 배포
-          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << EOF
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.BACKEND_SERVER_HOST }}
+          username: ${{ secrets.BACKEND_SERVER_USER }}
+          password: ${{ secrets.BACKEND_SERVER_PASSWORD }}
+          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,API_SERVER_CHANGED,TICKET_SERVER_CHANGED,TARGET_BRANCH,IMAGE_TAG,LOKI_URL
+          script: |
             cd /app/web10-beastcamp
 
             # 최신 코드 가져오기
@@ -166,13 +155,18 @@ jobs:
 
             cd backend
 
+            # 환경 변수 설정 (LOKI_URL 주입)
+            if [ ! -f .env ]; then touch .env; fi
+            sed -i '/^LOKI_URL=/d' .env
+            echo "LOKI_URL=$LOKI_URL" >> .env
+
             # 변경된 서비스만 재배포
             if [ "$API_SERVER_CHANGED" == "true" ]; then
               echo "🚀 Deploying api-server..."
               echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
               printf "services:\n  api-server:\n    image: %s\n" "$NCP_REGISTRY_URL/beastcamp-api-server:$IMAGE_TAG" > /tmp/backend.override.yml
-              docker-compose -f docker-compose.yml -f /tmp/backend.override.yml pull api-server
-              docker-compose -f docker-compose.yml -f /tmp/backend.override.yml up -d --no-build api-server
+              docker compose -f docker-compose.yml -f /tmp/backend.override.yml pull api-server promtail cadvisor
+              docker compose -f docker-compose.yml -f /tmp/backend.override.yml up -d --no-build api-server promtail cadvisor
               echo "✅ API Server deployed successfully"
             fi
 
@@ -180,14 +174,22 @@ jobs:
               echo "🚀 Deploying ticket-server..."
               echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
               printf "services:\n  ticket-server:\n    image: %s\n" "$NCP_REGISTRY_URL/beastcamp-ticket-server:$IMAGE_TAG" > /tmp/backend.override.yml
-              docker-compose -f docker-compose.yml -f /tmp/backend.override.yml pull ticket-server
-              docker-compose -f docker-compose.yml -f /tmp/backend.override.yml up -d --no-build ticket-server
+              docker compose -f docker-compose.yml -f /tmp/backend.override.yml pull ticket-server promtail cadvisor
+              docker compose -f docker-compose.yml -f /tmp/backend.override.yml up -d --no-build ticket-server promtail cadvisor
               echo "✅ Ticket Server deployed successfully"
             fi
 
             # 이전 이미지 정리
             docker image prune -f
-          EOF
+        env:
+          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
+          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
+          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          API_SERVER_CHANGED: ${{ needs.resolve-targets.outputs.api_server }}
+          TICKET_SERVER_CHANGED: ${{ needs.resolve-targets.outputs.ticket_server }}
+          TARGET_BRANCH: ${{ github.event.inputs.branch }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
 
   deploy-queue-backend:
     name: Deploy - Queue Backend
@@ -196,22 +198,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to queue server
-        env:
-          SERVER_HOST: ${{ secrets.QUEUE_SERVER_HOST }}
-          SERVER_USER: ${{ secrets.QUEUE_SERVER_USER }}
-          SERVER_PASSWORD: ${{ secrets.QUEUE_SERVER_PASSWORD }}
-          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
-          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
-          TARGET_BRANCH: ${{ github.event.inputs.branch }}
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
-        run: |
-          # SSH 비밀번호 기반 접속 준비
-          sudo apt-get update -y
-          sudo apt-get install -y sshpass
-
-          # 큐 서버에서 빌드 및 배포
-          sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << EOF
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.QUEUE_SERVER_HOST }}
+          username: ${{ secrets.QUEUE_SERVER_USER }}
+          password: ${{ secrets.QUEUE_SERVER_PASSWORD }}
+          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,TARGET_BRANCH,IMAGE_TAG,LOKI_URL
+          script: |
             cd /app/web10-beastcamp
 
             # 최신 코드 가져오기
@@ -220,16 +213,28 @@ jobs:
 
             # queue-backend 서비스 재배포
             cd queue-backend
+
+            # 환경 변수 설정 (LOKI_URL 주입)
+            if [ ! -f .env ]; then touch .env; fi
+            sed -i '/^LOKI_URL=/d' .env
+            echo "LOKI_URL=$LOKI_URL" >> .env
+
             echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
             printf "services:\n  queue-backend:\n    image: %s\n" "$NCP_REGISTRY_URL/beastcamp-queue-backend:$IMAGE_TAG" > /tmp/queue.override.yml
-            docker-compose -f docker-compose.yml -f /tmp/queue.override.yml pull queue-backend
-            docker-compose -f docker-compose.yml -f /tmp/queue.override.yml up -d --no-build queue-backend
-
+            docker compose -f docker-compose.yml -f /tmp/queue.override.yml pull queue-backend promtail cadvisor
+            docker compose -f docker-compose.yml -f /tmp/queue.override.yml up -d --no-build queue-backend promtail cadvisor
+            
             # 이전 이미지 정리
             docker image prune -f
 
             echo "✅ Queue Backend deployed successfully"
-          EOF
+        env:
+          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
+          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
+          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          TARGET_BRANCH: ${{ github.event.inputs.branch }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
 
   deployment-summary:
     name: Deployment Summary
