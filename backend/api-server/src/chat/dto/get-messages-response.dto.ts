@@ -23,7 +23,7 @@ export class ChatMessageResponseDto {
     description: '메시지 생성 시간',
     example: '2024-01-01T00:00:00.000Z',
   })
-  timestamp: Date;
+  timestamp: string;
 }
 
 export class GetMessagesResponseDto {

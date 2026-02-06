@@ -9,7 +9,7 @@ export interface ChatMessageResponse {
   id: string;
   nickname: string;
   message: string;
-  timestamp: Date;
+  timestamp: string;
 }
 
 @Injectable()
@@ -31,7 +31,7 @@ export class ChatService {
       id: msg.id.toString(),
       nickname: msg.user.nickname,
       message: msg.message,
-      timestamp: msg.timestamp,
+      timestamp: msg.timestamp.toISOString(),
     }));
   }
 
@@ -109,7 +109,7 @@ export class ChatService {
       id: messageWithUser!.id.toString(),
       nickname: messageWithUser!.user.nickname,
       message: messageWithUser!.message,
-      timestamp: messageWithUser!.timestamp,
+      timestamp: messageWithUser!.timestamp.toISOString(),
     };
   }
 
